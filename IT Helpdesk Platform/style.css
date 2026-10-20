@@ -1,0 +1,122 @@
+/* IT Helpdesk Platform */
+
+html {
+    font-size: 14px;
+}
+
+@media (min-width: 768px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
+    box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+}
+
+html {
+    position: relative;
+    min-height: 100%;
+}
+
+body {
+    margin-bottom: 60px;
+}
+
+.form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
+    color: var(--bs-secondary-color);
+    text-align: end;
+}
+
+.form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
+    text-align: start;
+}
+
+html {
+    overflow-y: scroll;
+}
+
+body {
+    background-color: #f4f6f9;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.navbar-brand {
+    font-weight: bold;
+    color: #0d6efd !important;
+}
+
+.main-container {
+    padding-top: 40px;
+    padding-bottom: 60px;
+}
+
+/* Dashboard Stat Cards */
+.stat-card {
+    border-radius: 10px;
+    border: none;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    transition: transform 0.2s ease-in-out;
+    cursor: pointer;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+}
+
+.stat-card .card-title {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #6c757d;
+}
+
+.stat-card .display-4 {
+    font-weight: 600;
+}
+
+/* General Content Cards */
+.content-card {
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    padding: 25px;
+    border: 1px solid rgba(0,0,0,0.05);
+}
+
+/* Ticket Details Chat Bubble */
+.chat-bubble {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 15px;
+    border-left: 4px solid #0d6efd;
+}
+
+/* Authentification Show Password */
+.password-toggle-icon {
+    cursor: pointer;
+}
+
+.password-toggle-icon:hover {
+    color: #0d6efd !important;
+}
+
+/* --- Custom Navbar Styling --- */
+
+/* 1. Color for inactive pages */
+.custom-nav-link {
+    color: #9b9d9e !important;
+    transition: color 0.25s ease-in-out;
+    text-decoration: none;
+}
+
+/* 2. Hover color */
+.custom-nav-link:hover {
+    color: #c7c8c9 !important;
+}
+
+/* 3. Color for the active page */
+.custom-nav-link.active-page {
+    color: #ffffff !important;
+    font-weight: 600;
+}

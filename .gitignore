@@ -1,0 +1,99 @@
+# ==========================================================
+# 1. Build Results & .NET Core (Din Dotnet.gitignore)
+# ==========================================================
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Ww][Ii][Nn]32/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+# .NET Core
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# ASP.NET Scaffolding
+ScaffoldingReadMe.txt
+
+# NuGet Packages & Symbols
+*.nupkg
+*.snupkg
+*.nuget.props
+*.nuget.targets
+
+# MSBuild Binary and Structured Log
+*.binlog
+
+# MSTest & NUnit Test Results
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+*.VisualState.xml
+TestResult.xml
+nunit-*.xml
+CodeCoverage/
+*.coverage
+*.coveragexml
+
+# ==========================================================
+# 2. Visual Studio / Rider / VS Code (Esențiale pentru proiectul tău)
+# ==========================================================
+.vs/
+.idea/
+.vscode/
+*.user
+*.rsuser
+*.suo
+*.userosscache
+*.sln.docstates
+*.userprefs
+launchSettings.json.user
+
+# ==========================================================
+# 3. Baze de Date Locale & Backups (SQLite / SQL Server / MySQL)
+# ==========================================================
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+*.mdf
+*.ldf
+*.ndf
+*.bak
+# Ignoră backup-urile automate MySQL Workbench, dar păstrează IT Helpdesk Database.mwb
+*.mwb.bak
+*.mwb.beforefix
+
+# ==========================================================
+# 4. Specific pentru IT Helpdesk Platform (Uploads, ML.NET, Secrets)
+# ==========================================================
+# Ignoră setările locale cu parole/connection strings personale
+appsettings.Local.json
+.env
+
+# Ignoră fișierele de test încărcate de utilizatori în wwwroot/uploads, dar păstrează structura de foldere
+wwwroot/uploads/avatars/*
+!wwwroot/uploads/avatars/.gitkeep
+wwwroot/uploads/tickets/*
+!wwwroot/uploads/tickets/.gitkeep
+
+# Fișiere temporare ML.NET (AutoML logs)
+*.mlnet.log
+
+# ==========================================================
+# 5. Sistem de Operare & Fișiere Temporare Office (Word/PowerPoint)
+# ==========================================================
+~$*
+*~
+.DS_Store
+Thumbs.db
+Desktop.ini
