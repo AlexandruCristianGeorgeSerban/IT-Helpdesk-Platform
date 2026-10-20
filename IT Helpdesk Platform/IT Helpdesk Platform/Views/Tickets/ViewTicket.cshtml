@@ -2,7 +2,6 @@
 
 @{
     ViewData["Title"] = "Ticket Details";
-
     bool isResolvedOrClosed = Model.Status == "Resolved" || Model.Status == "Closed";
 
     var statusClass = Model.Status switch
@@ -23,110 +22,190 @@
         _ => "bg-secondary"
     };
 
-    var titleClass = isResolvedOrClosed ? "text-decoration-line-through text-muted" : "";
     var chatCardClass = isResolvedOrClosed ? "opacity-75" : "";
-
-    bool isITStaff = User.IsInRole("Admin") || // for Milestone 4
-                     User.IsInRole("Agent") || // for Milestone 4
-                     Context.Request.Query["role"] == "Admin" || // [url]?role=Admin for testing
-                     Context.Request.Query["role"] == "Agent";   // [url]?role=Agent for testing
+    bool isITStaff = User.IsInRole("Admin") || User.IsInRole("Agent");
 }
 
-<div class="container main-container">
+<div class="container main-container mt-4">
     <div class="mb-3">
-        <a asp-action="MyTickets" class="text-decoration-none text-secondary">
+        <a asp-action="@(isITStaff ? "AllTickets" : "MyTickets")" class="text-decoration-none text-secondary">
             <i class="bi bi-arrow-left"></i> Back to tickets
         </a>
     </div>
     
     <div class="row">
         <div class="col-md-8 mb-4">
-            <div class="content-card mb-4">
+            <div class="content-card mb-4 shadow-sm p-4 bg-white rounded">
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h3 class="mb-0 @titleClass">#@Model.Id - @Model.Title</h3>
-                    <span class="badge @statusClass fs-6">@Model.Status</span>
+                    <h3 class="mb-0">#@Model.Id - @Model.Title</h3>
+                    <span class="badge @statusClass fs-6 px-3">@Model.Status</span>
                 </div>
                 <hr>
                 <p class="fw-bold text-secondary mb-1">Description:</p>
-                <p style="white-space: pre-wrap;">@Model.Description</p>
+                <p class="bg-light p-3 rounded border" style="white-space: pre-wrap;">@Model.Description</p>
+
+                @if (Model.Attachments != null && Model.Attachments.Any(a => a.CommentId == null))
+                {
+                    <div class="mt-4">
+                        <p class="fw-bold text-secondary mb-2"><i class="bi bi-paperclip"></i> Attached Files:</p>
+                        <div class="d-flex flex-wrap gap-2">
+                            @foreach (var attachment in Model.Attachments.Where(a => a.CommentId == null))
+                            {
+                                <a href="@attachment.FilePath" target="_blank">
+                                    <img src="@attachment.FilePath" alt="@attachment.FileName" class="img-thumbnail shadow-sm" style="max-height: 120px; object-fit: cover;" />
+                                </a>
+                            }
+                        </div>
+                    </div>
+                }
             </div>
 
-            <div class="content-card @chatCardClass">
+            <div class="content-card shadow-sm p-4 bg-white rounded @chatCardClass">
                 <h5 class="mb-4"><i class="bi bi-chat-left-text me-2"></i>Discussion Thread</h5>
                 
-                <div class="d-flex mb-4">
-                    <div class="flex-shrink-0">
-                        <div class="bg-secondary text-muted rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 45px; height: 45px;">
-                            <i class="bi bi-robot"></i>
+                <div id="chatThread" class="pe-2">
+                    <div class="d-flex mb-4">
+                        <div class="flex-shrink-0">
+                            <div class="bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold shadow-sm" style="width: 45px; height: 45px;">
+                                <i class="bi bi-robot"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <div class="p-3 bg-light border rounded">
+                                <strong>System Notification</strong> <span class="text-muted small ms-2">@Model.CreatedAt.ToString("MMM dd, yyyy, HH:mm")</span>
+                                <p class="mb-0 mt-2">This ticket has been registered successfully. An IT agent will review it shortly.</p>
+                            </div>
                         </div>
                     </div>
-                    <div class="flex-grow-1 ms-3">
-                        <div class="chat-bubble bg-light border-secondary">
-                            <strong>System Notification</strong> <span class="text-muted small ms-2">@Model.CreatedAt.ToString("MMM dd, yyyy, HH:mm")</span>
-                            <p class="mb-0 mt-2">This ticket has been registered successfully. An IT agent will review it shortly.</p>
+
+                    @foreach (var comment in Model.Comments?.OrderBy(c => c.CreatedAt) ?? Enumerable.Empty<Comment>())
+                    {
+                        string bubbleBorderClass = "border-secondary-subtle";
+                        string avatarBgClass = "bg-primary";
+                        
+                        if (comment.User?.Role == "Admin")
+                        {
+                            bubbleBorderClass = "border-danger border-2";
+                            avatarBgClass = "bg-danger";
+                        }
+                        else if (comment.User?.Role == "Agent")
+                        {
+                            bubbleBorderClass = "border-success border-2";
+                            avatarBgClass = "bg-success";
+                        }
+
+                        bool commentUserHasPic = false;
+                        if (!string.IsNullOrEmpty(comment.User?.ProfilePicturePath))
+                        {
+                            var picPath = System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "wwwroot", comment.User.ProfilePicturePath.TrimStart('/'));
+                            if (System.IO.File.Exists(picPath))
+                            {
+                                commentUserHasPic = true;
+                            }
+                        }
+
+                        <div class="d-flex mb-4">
+                            <div class="flex-shrink-0">
+                                @if (commentUserHasPic)
+                                {
+                                    <img src="@comment.User!.ProfilePicturePath" class="rounded-circle shadow-sm" style="width: 45px; height: 45px; object-fit: cover;" alt="Avatar" />
+                                }
+                                else
+                                {
+                                    <div class="@avatarBgClass text-white rounded-circle d-flex align-items-center justify-content-center fw-bold shadow-sm" style="width: 45px; height: 45px;">
+                                        @(comment.User?.FirstName?[0] ?? 'U')@(comment.User?.LastName?[0] ?? 'S')
+                                    </div>
+                                }
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <div class="p-3 border rounded bg-white shadow-sm @bubbleBorderClass">
+                                    <strong>@(comment.User?.FirstName ?? "Unknown") @(comment.User?.LastName ?? "User")</strong>
+                
+                                    @if (comment.User?.Role == "Admin")
+                                    {
+                                        <span class="badge bg-danger ms-1 shadow-sm">Administrator</span>
+                                    }
+                                    else if (comment.User?.Role == "Agent")
+                                    {
+                                        <span class="badge bg-success ms-1 shadow-sm">IT Agent</span>
+                                    }
+
+                                    <span class="text-muted small ms-2">@comment.CreatedAt.ToString("MMM dd, yyyy, HH:mm")</span>
+                                    <p class="mb-0 mt-2">@comment.Text</p>
+
+                                    @if (comment.Attachments != null && comment.Attachments.Any())
+                                    {
+                                        <div class="mt-2 d-flex flex-wrap gap-2">
+                                            @foreach (var img in comment.Attachments)
+                                            {
+                                                <a href="@img.FilePath" target="_blank">
+                                                    <img src="@img.FilePath" class="img-thumbnail" style="max-height: 80px; object-fit: cover;">
+                                                </a>
+                                            }
+                                        </div>
+                                    }
+                                </div>
+                            </div>
                         </div>
-                    </div>
+                    }
                 </div>
 
                 @if (isResolvedOrClosed)
                 {
                     <div class="mt-4 pt-3 border-top text-center">
-                        <p class="text-muted mb-0"><i class="bi bi-lock-fill"></i> This ticket is resolved and locked for new replies.</p>
+                        <p class="text-muted mb-0">
+                            <i class="bi bi-lock-fill"></i>
+                            This ticket is @(Model.Status?.ToLower() ?? "closed") and locked for new replies.
+                        </p>
                     </div>
                 }
                 else
                 {
                     <div class="mt-4 pt-3 border-top">
-                        <form>
-                            <div class="mb-3">
-                                <textarea class="form-control bg-light" id="reply" rows="3" placeholder="Type your reply here..."></textarea>
+                        <div class="mb-3">
+                            <textarea class="form-control bg-light mb-2" id="commentText" rows="3" placeholder="Type your reply here..."></textarea>
+    
+                            <div class="d-flex align-items-center gap-2 mt-2">
+                                <label for="replyFiles" class="btn btn-outline-secondary btn-sm mb-0" style="cursor: pointer;">
+                                    <i class="bi bi-paperclip me-1"></i> Choose Files
+                                </label>
+                                <input type="file" id="replyFiles" name="replyFiles" multiple accept="image/*" class="d-none" onchange="updateFileLabel(this)" />
+                                <span id="fileChosenLabel" class="small text-muted mb-0">No file chosen</span>
                             </div>
-                            
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <input type="file" id="chatAttachment" class="d-none" multiple>
-                                    <label for="chatAttachment" class="btn btn-light border text-secondary btn-sm">
-                                        <i class="bi bi-paperclip"></i> Attach File
-                                    </label>
-                                </div>
-                                
-                                <button type="button" class="btn btn-primary">
-                                    <i class="bi bi-reply-fill"></i> Send Reply
-                                </button>
-                            </div>
-                        </form>
+                        </div>
+                        
+                        <div class="d-flex justify-content-end align-items-center">
+                            <button type="button" id="btnSendReply" onclick="sendReply(@Model.Id)" class="btn btn-primary px-4">
+                                <i class="bi bi-reply-fill me-1"></i> Send Reply
+                            </button>
+                        </div>
                     </div>
                 }
             </div>
         </div>
 
         <div class="col-md-4">
-            
-            <div class="content-card bg-light border-0 mb-4">
+            <div class="content-card bg-light border shadow-sm p-4 rounded mb-4">
                 <h5 class="mb-3">Ticket Information</h5>
                 <ul class="list-unstyled mb-0">
-                    <li class="mb-2">
-                        <span class="text-muted">Requester:</span>
+                    <li class="mb-3">
+                        <span class="text-muted d-block small fw-bold">Requester</span>
                         <strong>@(Model.Requester != null ? $"{Model.Requester.FirstName} {Model.Requester.LastName}" : "Unknown")</strong>
                     </li>
-                    <li class="mb-2">
-                        <span class="text-muted">Department:</span>
-                        <strong>@(Model.Requester?.Department != null ? Model.Requester.Department.Name : "N/A")</strong>
+                    <li class="mb-3">
+                        <span class="text-muted d-block small fw-bold">Department</span>
+                        <strong>@(Model.Requester?.Department?.Name ?? "N/A")</strong>
                     </li>
-                    <li class="mb-2">
-                        <span class="text-muted">Created:</span>
+                    <li class="mb-3">
+                        <span class="text-muted d-block small fw-bold">Created</span>
                         <strong>@Model.CreatedAt.ToString("MMM dd, yyyy")</strong>
                     </li>
-                    <li class="mb-2">
-                        <span class="text-muted">Priority:</span>
+                    <li class="mb-3">
+                        <span class="text-muted d-block small fw-bold">Priority</span>
                         <span class="badge @priorityTextClass">@Model.Priority</span>
                     </li>
-                    <li class="mb-2">
-                        <span class="text-muted">Category:</span>
-                        <strong>@(Model.Category != null ? Model.Category.Name : "N/A")</strong>
-                    </li>
                     <li class="mb-0">
-                        <span class="text-muted">Assigned to:</span>
+                        <span class="text-muted d-block small fw-bold">Assigned to</span>
                         <strong>@(Model.AssignedAgent != null ? $"{Model.AssignedAgent.FirstName} {Model.AssignedAgent.LastName}" : "Unassigned")</strong>
                     </li>
                 </ul>
@@ -134,8 +213,8 @@
 
             @if (isITStaff)
             {
-                <div class="content-card border-success border border-2 shadow-sm bg-white">
-                    <h6 class="mb-3 fw-bold text-success-emphasis">
+                <div class="content-card border-success border border-2 shadow-sm bg-white p-4 rounded">
+                    <h6 class="mb-3 fw-bold text-success">
                         <i class="bi bi-gear-fill me-2"></i>Agent Actions
                     </h6>
                     
@@ -143,7 +222,7 @@
                         <input type="hidden" name="TicketId" value="@Model.Id" />
                         
                         <div class="mb-3">
-                            <label class="form-label small fw-bold text-muted">Change Status</label>
+                            <label class="form-label small fw-bold text-muted">Status</label>
                             <select name="Status" class="form-select form-select-sm" asp-for="Status">
                                 <option value="Open">Open</option>
                                 <option value="In Progress">In Progress</option>
@@ -153,7 +232,7 @@
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label small fw-bold text-muted">Change Priority</label>
+                            <label class="form-label small fw-bold text-muted">Priority</label>
                             <select name="Priority" class="form-select form-select-sm" asp-for="Priority">
                                 <option value="Low">Low</option>
                                 <option value="Medium">Medium</option>
@@ -175,7 +254,107 @@
                     </form>
                 </div>
             }
-
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        function updateFileLabel(input) {
+            var label = document.getElementById('fileChosenLabel');
+            if (input.files && input.files.length > 0) {
+                label.textContent = input.files.length === 1 ? input.files[0].name : input.files.length + " files selected";
+            } else {
+                label.textContent = "No file chosen";
+            }
+        }
+
+        function sendReply(ticketId) {
+            var text = $('#commentText').val();
+            var files = $('#replyFiles')[0].files;
+
+            if (!text.trim() && files.length === 0) return;
+
+            var $btn = $('#btnSendReply');
+            $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Sending...');
+
+            var formData = new FormData();
+            formData.append('ticketId', ticketId);
+            formData.append('text', text);
+            
+            for (var i = 0; i < files.length; i++) {
+                formData.append('files', files[i]);
+            }
+
+            $.ajax({
+                url: '/Tickets/AddComment',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function (res) {
+                    if (res.success) {
+                        var bubbleBorderClass = "border-secondary-subtle";
+                        var avatarBgClass = "bg-primary";
+                        var badgeHtml = "";
+                        
+                        if (res.role === "Admin") {
+                            bubbleBorderClass = "border-danger border-2";
+                            avatarBgClass = "bg-danger";
+                            badgeHtml = `<span class="badge bg-danger ms-1 shadow-sm">Administrator</span>`;
+                        } else if (res.role === "Agent") {
+                            bubbleBorderClass = "border-success border-2";
+                            avatarBgClass = "bg-success";
+                            badgeHtml = `<span class="badge bg-success ms-1 shadow-sm">IT Agent</span>`;
+                        }
+
+                        var avatarHtml = '';
+                        if (res.profilePic) {
+                            avatarHtml = `<img src="${res.profilePic}" class="rounded-circle shadow-sm" style="width: 45px; height: 45px; object-fit: cover;" alt="Avatar" />`;
+                        } else {
+                            var initials = res.userName.split(' ').map(n => n[0]).join('');
+                            avatarHtml = `<div class="${avatarBgClass} text-white rounded-circle d-flex align-items-center justify-content-center fw-bold shadow-sm" style="width: 45px; height: 45px;">${initials}</div>`;
+                        }
+
+                        var attachmentsHtml = '';
+                        if (res.attachments && res.attachments.length > 0) {
+                            attachmentsHtml += '<div class="mt-2 d-flex flex-wrap gap-2">';
+                            res.attachments.forEach(function(path) {
+                                attachmentsHtml += `<a href="${path}" target="_blank"><img src="${path}" class="img-thumbnail" style="max-height: 80px; object-fit: cover;"></a>`;
+                            });
+                            attachmentsHtml += '</div>';
+                        }
+
+                        var html = `
+                            <div class="d-flex mb-4">
+                                <div class="flex-shrink-0">
+                                    ${avatarHtml}
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <div class="p-3 border rounded bg-white shadow-sm ${bubbleBorderClass}">
+                                        <strong>${res.userName}</strong> ${badgeHtml}
+                                        <span class="text-muted small ms-2">${res.date}</span>
+                                        <p class="mb-0 mt-2">${res.text}</p>
+                                        ${attachmentsHtml}
+                                    </div>
+                                </div>
+                            </div>`;
+                        
+                        $('#chatThread').append(html);
+                        $('#commentText').val('');
+                        $('#replyFiles').val('');
+                        $('#fileChosenLabel').text('No file chosen');
+
+                    } else {
+                        alert(res.message);
+                    }
+                    $btn.prop('disabled', false).html('<i class="bi bi-reply-fill me-1"></i> Send Reply');
+                },
+                error: function () {
+                    alert('Error sending reply.');
+                    $btn.prop('disabled', false).html('<i class="bi bi-reply-fill me-1"></i> Send Reply');
+                }
+            });
+        }
+    </script>
+}

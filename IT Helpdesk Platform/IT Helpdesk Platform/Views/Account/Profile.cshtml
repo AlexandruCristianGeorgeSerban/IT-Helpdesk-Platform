@@ -13,7 +13,7 @@
     string roleBadgeClass = Model.Role switch
     {
         "Admin" => "bg-danger",
-        "Agent" => "bg-warning text-dark",
+        "Agent" => "bg-success",
         _ => "bg-primary"
     };
 
@@ -32,6 +32,17 @@
         activeTicketsCount = Model.SubmittedTickets?.Count(t => t.Status == "Open" || t.Status == "In Progress") ?? 0;
         completedTicketsCount = Model.SubmittedTickets?.Count(t => t.Status == "Resolved" || t.Status == "Closed") ?? 0;
     }
+
+    bool hasProfilePic = false;
+    if (!string.IsNullOrEmpty(Model.ProfilePicturePath))
+    {
+        var physicalPath = System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "wwwroot", Model.ProfilePicturePath.TrimStart('/'));
+        if (System.IO.File.Exists(physicalPath))
+        {
+            hasProfilePic = true;
+        }
+    }
+    var profilePicUrl = hasProfilePic ? Model.ProfilePicturePath : Url.Content("~/images/person-circle.svg");
 }
 
 <style>
@@ -43,7 +54,20 @@
         border-radius: 50%;
         overflow: hidden;
         background-color: var(--bs-secondary-bg);
+        border: 2px solid var(--bs-border-color);
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
     }
+
+    .avatar-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+        .avatar-image.default-svg {
+            filter: brightness(0) invert(0.6);
+            padding: 10px;
+        }
 
     .avatar-overlay {
         position: absolute;
@@ -72,61 +96,60 @@
     }
 </style>
 
-<div class="container main-container">
+<div class="container main-container mt-4">
     <h2 class="mb-4 text-body"><i class="bi bi-person text-secondary me-2"></i>My Profile</h2>
 
-    <div class="row">
-        <div class="col-md-4 mb-4">
-            <div class="content-card text-center h-100">
-                <div class="avatar-wrapper mb-3 shadow-sm border border-secondary-subtle">
-                    <div class="d-flex justify-content-center align-items-center h-100 w-100 text-body-secondary">
-                        <i class="bi bi-person-fill" style="font-size: 4.5rem;"></i>
-                    </div>
-                    <div class="avatar-overlay">
-                        <i class="bi bi-camera-fill fs-4"></i>
-                        <span class="small mt-1 fw-bold">Change</span>
-                    </div>
-                </div>
-
-                <h4 class="mb-1 text-body">@Model.FirstName @Model.LastName</h4>
-                <p class="text-body-secondary mb-3">
-                    <span class="badge @roleBadgeClass me-1">@roleDisplayName</span>
-                    @(Model.Department != null ? Model.Department.Name : "No Department")
-                </p>
-
-                <div class="badge bg-success w-100 mb-4 py-2 shadow-sm fs-6">Active Account</div>
-
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <span class="text-body-secondary">@(isITStaff ? "Assigned Tickets" : "Open Tickets")</span>
-                    <span class="badge bg-primary rounded-pill">@activeTicketsCount</span>
-                </div>
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <span class="text-body-secondary">Resolved Tickets</span>
-                    <span class="badge bg-secondary rounded-pill">@completedTicketsCount</span>
-                </div>
-
-                <hr class="border-secondary-subtle" />
-                <button class="btn btn-outline-danger w-100 mt-2">
-                    <i class="bi bi-box-arrow-right me-2"></i>Sign Out
-                </button>
-            </div>
-        </div>
-
-        <div class="col-md-8 mb-4">
-            <div class="content-card h-100">
-                <h4 class="mb-4 text-body"><i class="bi bi-gear me-2"></i>Account Settings</h4>
-
-                @if (TempData["ProfileSuccess"] != null)
-                {
-                    <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
-                        <i class="bi bi-check-circle-fill me-2"></i> @TempData["ProfileSuccess"]
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                }
-
-                <form asp-action="UpdateProfile" method="post">
-                    <input type="hidden" name="Id" value="@Model.Id" />
+    <form asp-action="UpdateProfile" method="post" enctype="multipart/form-data" id="profileForm">
+        <input type="hidden" name="Id" value="@Model.Id" />
+        
+        <div class="row">
+            <div class="col-md-4 mb-4">
+                <div class="content-card text-center h-100 p-4 shadow-sm bg-white rounded">
                     
+                    <div class="avatar-wrapper mb-3" onclick="document.getElementById('profilePicInput').click()">
+                        <img src="@profilePicUrl" id="avatarPreview" class="avatar-image @(!hasProfilePic ? "default-svg" : "")" alt="Profile Picture" />
+                        
+                        <div class="avatar-overlay">
+                            <i class="bi bi-camera-fill fs-4"></i>
+                            <span class="small mt-1 fw-bold">Change</span>
+                        </div>
+                    </div>
+                    
+                    <input type="file" id="profilePicInput" name="ProfilePicture" accept="image/*" class="d-none" onchange="previewImage(this)">
+
+                    <h4 class="mb-1 text-body">@Model.FirstName @Model.LastName</h4>
+                    <p class="text-body-secondary mb-3">
+                        <span class="badge @roleBadgeClass me-1">@roleDisplayName</span>
+                        @(Model.Department != null ? Model.Department.Name : "No Department")
+                    </p>
+
+                    <div class="badge bg-success w-100 mb-4 py-2 shadow-sm fs-6">Active Account</div>
+
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="text-body-secondary">@(isITStaff ? "Assigned Tickets" : "Open Tickets")</span>
+                        <span class="badge bg-primary rounded-pill">@activeTicketsCount</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <span class="text-body-secondary">Resolved Tickets</span>
+                        <span class="badge bg-secondary rounded-pill">@completedTicketsCount</span>
+                    </div>
+
+                    <hr class="border-secondary-subtle" />
+                </div>
+            </div>
+
+            <div class="col-md-8 mb-4">
+                <div class="content-card h-100 p-4 shadow-sm bg-white rounded">
+                    <h4 class="mb-4 text-body"><i class="bi bi-gear me-2"></i>Account Settings</h4>
+
+                    @if (TempData["ProfileSuccess"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+                            <i class="bi bi-check-circle-fill me-2"></i> @TempData["ProfileSuccess"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    }
+
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label text-body-secondary small fw-bold">FIRST NAME</label>
@@ -149,115 +172,8 @@
                         <div class="input-group shadow-sm">
                             <select class="form-select bg-light text-body-secondary border-secondary-subtle" id="countryCode" style="max-width: 130px;" onchange="updateHiddenPhone()">
                                 <option value="+1">🇺🇸/🇨🇦 +1</option>
-                                <option value="+7">🇷🇺/🇰🇿 +7</option>
-                                <option value="+20">🇪🇬 +20</option>
-                                <option value="+27">🇿🇦 +27</option>
-                                <option value="+30">🇬🇷 +30</option>
-                                <option value="+31">🇳🇱 +31</option>
-                                <option value="+32">🇧🇪 +32</option>
-                                <option value="+33">🇫🇷 +33</option>
-                                <option value="+34">🇪🇸 +34</option>
-                                <option value="+36">🇭🇺 +36</option>
-                                <option value="+39">🇮🇹 +39</option>
                                 <option value="+40" selected>🇷🇴 +40</option>
-                                <option value="+41">🇨🇭 +41</option>
-                                <option value="+43">🇦🇹 +43</option>
                                 <option value="+44">🇬🇧 +44</option>
-                                <option value="+45">🇩🇰 +45</option>
-                                <option value="+46">🇸🇪 +46</option>
-                                <option value="+47">🇳🇴 +47</option>
-                                <option value="+48">🇵🇱 +48</option>
-                                <option value="+49">🇩🇪 +49</option>
-                                <option value="+51">🇵🇪 +51</option>
-                                <option value="+52">🇲🇽 +52</option>
-                                <option value="+53">🇨🇺 +53</option>
-                                <option value="+54">🇦🇷 +54</option>
-                                <option value="+55">🇧🇷 +55</option>
-                                <option value="+56">🇨🇱 +56</option>
-                                <option value="+57">🇨🇴 +57</option>
-                                <option value="+58">🇻🇪 +58</option>
-                                <option value="+60">🇲🇾 +60</option>
-                                <option value="+61">🇦🇺 +61</option>
-                                <option value="+62">🇮🇩 +62</option>
-                                <option value="+63">🇵🇭 +63</option>
-                                <option value="+64">🇳🇿 +64</option>
-                                <option value="+65">🇸🇬 +65</option>
-                                <option value="+66">🇹🇭 +66</option>
-                                <option value="+81">🇯🇵 +81</option>
-                                <option value="+82">🇰🇷 +82</option>
-                                <option value="+84">🇻🇳 +84</option>
-                                <option value="+86">🇨🇳 +86</option>
-                                <option value="+90">🇹🇷 +90</option>
-                                <option value="+91">🇮🇳 +91</option>
-                                <option value="+92">🇵🇰 +92</option>
-                                <option value="+93">🇦🇫 +93</option>
-                                <option value="+94">🇱🇰 +94</option>
-                                <option value="+95">🇲🇲 +95</option>
-                                <option value="+98">🇮🇷 +98</option>
-                                <option value="+212">🇲🇦 +212</option>
-                                <option value="+213">🇩🇿 +213</option>
-                                <option value="+216">🇹🇳 +216</option>
-                                <option value="+218">🇱🇾 +218</option>
-                                <option value="+220">🇬🇲 +220</option>
-                                <option value="+234">🇳🇬 +234</option>
-                                <option value="+254">🇰🇪 +254</option>
-                                <option value="+255">🇹🇿 +255</option>
-                                <option value="+256">🇺🇬 +256</option>
-                                <option value="+351">🇵🇹 +351</option>
-                                <option value="+352">🇱🇺 +352</option>
-                                <option value="+353">🇮🇪 +353</option>
-                                <option value="+354">🇮🇸 +354</option>
-                                <option value="+355">🇦🇱 +355</option>
-                                <option value="+356">🇲🇹 +356</option>
-                                <option value="+357">🇨🇾 +357</option>
-                                <option value="+358">🇫🇮 +358</option>
-                                <option value="+359">🇧🇬 +359</option>
-                                <option value="+370">🇱🇹 +370</option>
-                                <option value="+371">🇱🇻 +371</option>
-                                <option value="+372">🇪🇪 +372</option>
-                                <option value="+373">🇲🇩 +373</option>
-                                <option value="+374">🇦🇲 +374</option>
-                                <option value="+375">🇧🇾 +375</option>
-                                <option value="+380">🇺🇦 +380</option>
-                                <option value="+381">🇷🇸 +381</option>
-                                <option value="+382">🇲🇪 +382</option>
-                                <option value="+385">🇭🇷 +385</option>
-                                <option value="+386">🇸🇮 +386</option>
-                                <option value="+387">🇧🇦 +387</option>
-                                <option value="+389">🇲🇰 +389</option>
-                                <option value="+420">🇨🇿 +420</option>
-                                <option value="+421">🇸🇰 +421</option>
-                                <option value="+423">🇱🇮 +423</option>
-                                <option value="+501">🇧🇿 +501</option>
-                                <option value="+502">🇬🇹 +502</option>
-                                <option value="+503">🇸🇻 +503</option>
-                                <option value="+504">🇭🇳 +504</option>
-                                <option value="+505">🇳🇮 +505</option>
-                                <option value="+506">🇨🇷 +506</option>
-                                <option value="+507">🇵🇦 +507</option>
-                                <option value="+509">🇭🇹 +509</option>
-                                <option value="+591">🇧🇴 +591</option>
-                                <option value="+593">🇪🇨 +593</option>
-                                <option value="+595">🇵🇾 +595</option>
-                                <option value="+598">🇺🇾 +598</option>
-                                <option value="+852">🇭🇰 +852</option>
-                                <option value="+853">🇲🇴 +853</option>
-                                <option value="+886">🇹🇼 +886</option>
-                                <option value="+961">🇱🇧 +961</option>
-                                <option value="+962">🇯🇴 +962</option>
-                                <option value="+963">🇸🇾 +963</option>
-                                <option value="+964">🇮🇶 +964</option>
-                                <option value="+965">🇰🇼 +965</option>
-                                <option value="+966">🇸🇦 +966</option>
-                                <option value="+968">🇴🇲 +968</option>
-                                <option value="+971">🇦🇪 +971</option>
-                                <option value="+972">🇮🇱 +972</option>
-                                <option value="+973">🇧🇭 +973</option>
-                                <option value="+974">🇶🇦 +974</option>
-                                <option value="+977">🇳🇵 +977</option>
-                                <option value="+994">🇦🇿 +994</option>
-                                <option value="+995">🇬🇪 +995</option>
-                                <option value="+998">🇺🇿 +998</option>
                             </select>
                             
                             <input type="text" id="phoneDigits" class="form-control border-secondary-subtle" placeholder="777 123 456" oninput="this.value = this.value.replace(/[^0-9 ]/g, ''); updateHiddenPhone()">
@@ -272,19 +188,56 @@
                     
                     <div class="form-check form-switch mb-2">
                         <input class="form-check-input" type="checkbox" asp-for="EmailNotificationsEnabled">
-                            <label class="form-check-label text-body" asp-for="EmailNotificationsEnabled">Email me when a ticket status changes</label>
-                        </div>
+                        <label class="form-check-label text-body" asp-for="EmailNotificationsEnabled">Email me when a ticket status changes</label>
+                    </div>
                     
-                        <div class="form-check form-switch mb-4">
-                            <input class="form-check-input" type="checkbox" asp-for="PushNotificationsEnabled">
-                                <label class="form-check-label text-body" asp-for="PushNotificationsEnabled">Enable desktop push notifications</label>
-                            </div>
+                    <div class="form-check form-switch mb-4">
+                        <input class="form-check-input" type="checkbox" asp-for="PushNotificationsEnabled">
+                        <label class="form-check-label text-body" asp-for="PushNotificationsEnabled">Enable desktop push notifications</label>
+                    </div>
 
                     <button type="submit" class="btn btn-primary px-4 shadow-sm mt-3">
                         <i class="bi bi-save me-2"></i>Save Changes
                     </button>
-                </form>
+                </div>
             </div>
         </div>
-    </div>
+    </form>
 </div>
+
+@section Scripts {
+    <script>
+        function previewImage(input) {
+            if (input.files && input.files[0]) {
+                var reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    var img = document.getElementById('avatarPreview');
+                    img.src = e.target.result;
+                    img.classList.remove('default-svg');
+                }
+                
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        $(document).ready(function () {
+            var fullPhone = $('#fullPhoneNumber').val();
+            if (fullPhone) {
+                var parts = fullPhone.split(' ');
+                if (parts.length > 1) {
+                    $('#countryCode').val(parts[0]);
+                    $('#phoneDigits').val(parts.slice(1).join(' '));
+                } else {
+                    $('#phoneDigits').val(fullPhone);
+                }
+            }
+        });
+
+        function updateHiddenPhone() {
+            var code = document.getElementById('countryCode').value;
+            var digits = document.getElementById('phoneDigits').value;
+            document.getElementById('fullPhoneNumber').value = code + ' ' + digits;
+        }
+    </script>
+}

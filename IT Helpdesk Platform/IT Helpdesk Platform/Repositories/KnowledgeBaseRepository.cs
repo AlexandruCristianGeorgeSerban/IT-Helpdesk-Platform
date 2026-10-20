@@ -1,8 +1,6 @@
 ﻿using IT_Helpdesk_Platform.Models;
 using IT_Helpdesk_Platform.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace IT_Helpdesk_Platform.Repositories
 {

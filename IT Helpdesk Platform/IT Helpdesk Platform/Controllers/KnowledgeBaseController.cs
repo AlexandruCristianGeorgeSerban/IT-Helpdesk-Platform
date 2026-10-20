@@ -1,7 +1,5 @@
-﻿using IT_Helpdesk_Platform.Services;
-using IT_Helpdesk_Platform.Services.Interfaces;
+﻿using IT_Helpdesk_Platform.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using System.Threading.Tasks;
 
 namespace IT_Helpdesk_Platform.Controllers
 {

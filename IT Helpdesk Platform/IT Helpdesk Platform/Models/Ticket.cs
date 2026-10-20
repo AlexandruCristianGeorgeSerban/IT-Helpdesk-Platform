@@ -1,7 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Net.Mail;
-using System.Xml.Linq;
 
 namespace IT_Helpdesk_Platform.Models
 {

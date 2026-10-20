@@ -1,23 +1,19 @@
-﻿using System.Reflection.Emit;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 
 namespace IT_Helpdesk_Platform.Models
 {
-    public class HelpdeskContext : DbContext
+    public class HelpdeskContext : IdentityDbContext<User, IdentityRole<int>, int>
     {
         public HelpdeskContext(DbContextOptions<HelpdeskContext> options) : base(options) { }
 
         public DbSet<Department> Departments { get; set; }
         public DbSet<Category> Categories { get; set; }
-        public DbSet<User> Users { get; set; }
-        public DbSet<Ticket> Tickets { get; set; }
-        public DbSet<Comment> Comments { get; set; }
-        public DbSet<Attachment> Attachments { get; set; }
 
+        public DbSet<Ticket> Tickets { get; set; }
+        public DbSet<Comment> Comments { get; set; } = default!;
+        public DbSet<Attachment> Attachments { get; set; }
         public DbSet<KnowledgeArticle> KnowledgeArticles { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

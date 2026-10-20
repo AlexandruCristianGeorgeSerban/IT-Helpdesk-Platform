@@ -1,14 +1,11 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.AspNetCore.Identity;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Net.Sockets;
 
 namespace IT_Helpdesk_Platform.Models
 {
-    public class User
+    public class User : IdentityUser<int>
     {
-        [Key]
-        public int Id { get; set; }
-
         [Required]
         [StringLength(50)]
         public string? FirstName { get; set; }
@@ -18,22 +15,14 @@ namespace IT_Helpdesk_Platform.Models
         public string? LastName { get; set; }
 
         [Required]
-        [EmailAddress]
-        [StringLength(150)]
-        public string? Email { get; set; }
-
-        [Required]
-        public string? PasswordHash { get; set; }
-
-        [Required]
         [StringLength(20)]
-        public string? Role { get; set; } // e.g., "Employee", "IT Agent"
-
-        [StringLength(20)]
-        public string? PhoneNumber { get; set; }
+        public string? Role { get; set; }
 
         public bool EmailNotificationsEnabled { get; set; } = false;
         public bool PushNotificationsEnabled { get; set; } = false;
+
+        [StringLength(255)]
+        public string? ProfilePicturePath { get; set; }
 
         public int DepartmentId { get; set; }
 

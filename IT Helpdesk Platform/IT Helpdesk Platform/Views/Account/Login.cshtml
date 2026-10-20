@@ -142,24 +142,38 @@
                 <h5 class="modal-title fw-bold" id="forgotPasswordModalLabel"><i class="bi bi-key me-2"></i>Reset Password</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body p-4">
-                <p class="text-muted small mb-4">Enter your email address below and we'll send you a secure link to reset your password.</p>
+            <div class="modal-body p-4 text-center">
                 
-                <form id="forgotPasswordForm">
-                    <div id="forgotSuccess" class="alert alert-success d-none small"></div>
-                    <div id="forgotError" class="alert alert-danger d-none small"></div>
-
-                    <div class="mb-4">
-                        <label class="form-label text-muted small fw-bold text-uppercase">Email Address</label>
-                        <div class="input-group shadow-sm">
-                            <span class="input-group-text bg-white border-end-0"><i class="bi bi-envelope text-muted"></i></span>
-                            <input type="email" name="Email" class="form-control border-start-0" placeholder="name@company.com" required>
+                <div id="forgotPasswordFormContainer">
+                    <p class="text-muted small mb-4 text-start">Enter your email address below and we'll send you a secure link to reset your password.</p>
+                    
+                    <form id="forgotPasswordForm" class="text-start">
+                        <div class="mb-4">
+                            <label class="form-label text-muted small fw-bold text-uppercase">Email Address</label>
+                            <div class="input-group shadow-sm">
+                                <span class="input-group-text bg-white border-end-0"><i class="bi bi-envelope text-muted"></i></span>
+                                <input type="email" name="Email" class="form-control border-start-0" placeholder="name@company.com" required id="forgotEmailInput">
+                            </div>
                         </div>
+                        <button type="submit" class="btn btn-primary w-100 shadow-sm" id="btnForgot">
+                            <i class="bi bi-send me-1"></i> Send Reset Link
+                        </button>
+                    </form>
+                </div>
+
+                <div id="maintenanceMessageContainer" class="d-none">
+                    <div class="mb-4 mt-2">
+                        <i class="bi bi-tools text-warning" style="font-size: 3.5rem;"></i>
                     </div>
-                    <button type="submit" class="btn btn-primary w-100 shadow-sm" id="btnForgot">
-                        <i class="bi bi-send me-1"></i> Send Reset Link
-                    </button>
-                </form>
+                    <h5 class="fw-bold mb-3">System Under Maintenance</h5>
+                    <p class="text-muted small mb-4">
+                        We are currently migrating our internal SMTP email services. Automated password resets are temporarily disabled. Please contact the IT Administration team directly to verify your identity and regain access.
+                    </p>
+                    
+                    <a href="mailto:admin@helpdesk.com" class="btn btn-primary w-100 shadow-sm mb-2">
+                        <i class="bi bi-envelope me-2"></i> Contact IT Support
+                    </a>
+                </div>
 
             </div>
         </div>
@@ -172,79 +186,106 @@
     }
 
     <script>
+        // --- PASSWORD VISIBILITY TOGGLE ---
+        function togglePassword(inputId, iconId) {
+            var input = document.getElementById(inputId);
+            var icon = document.getElementById(iconId);
+            
+            if (input.type === "password") {
+                input.type = "text";
+                icon.classList.remove('bi-eye');
+                icon.classList.add('bi-eye-slash');
+            } else {
+                input.type = "password";
+                icon.classList.remove('bi-eye-slash');
+                icon.classList.add('bi-eye');
+            }
+        }
+
         $(document).ready(function () {
             
-        // --- AJAX FOR REGISTER ---
-        $('#registerForm').on('submit', function (e) {
-            e.preventDefault();
-
-            var password = $('#regPassword').val();
-            var confirmPassword = $('#regConfirmPassword').val();
-            var $errorDiv = $('#registerError');
-
-            $errorDiv.addClass('d-none').removeClass('alert-success').addClass('alert-danger');
-
-            if (password !== confirmPassword) {
-                $errorDiv.removeClass('d-none').text('Passwords do not match! Please try again.');
-                return false;
-            }
-
-            var $btn = $('#btnRegister');
-            var formData = $(this).serialize();
-
-            $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Processing...');
-
-            $.ajax({
-                type: 'POST',
-                url: '/Account/RegisterAjax',
-                data: formData,
-                success: function (response) {
-                    if (response.success) {
-                        $errorDiv.removeClass('alert-danger d-none').addClass('alert-success')
-                                 .text('Account created successfully! Redirecting to Dashboard...');
-    
-                        $btn.html('<i class="bi bi-check-circle"></i> Success!');
-                                    
-                        setTimeout(function () {
-                            window.location.href = response.redirectUrl;
-                        }, 2000);
-
-                    } else {
-                        $errorDiv.removeClass('d-none').text(response.message);
-                        $btn.prop('disabled', false).text('Register & Login');
-                    }
-                },
-                error: function () {
-                    $errorDiv.removeClass('d-none').text('Server error. Could not connect to the database.');
-                    $btn.prop('disabled', false).text('Register & Login');
-                }
-            });
-        });
-
-            // --- AJAX FOR FORGOT PASSWORD ---
-            $('#forgotPasswordForm').on('submit', function (e) {
+            // --- AJAX FOR REGISTER ---
+            $('#registerForm').on('submit', function (e) {
                 e.preventDefault();
-                var $btn = $('#btnForgot');
+
+                var password = $('#regPassword').val();
+                var confirmPassword = $('#regConfirmPassword').val();
+                var $errorDiv = $('#registerError');
+
+                // Reset error state
+                $errorDiv.addClass('d-none').removeClass('alert-success').addClass('alert-danger');
+
+                // Client-side validation for matching passwords
+                if (password !== confirmPassword) {
+                    $errorDiv.removeClass('d-none').text('Passwords do not match! Please try again.');
+                    return false;
+                }
+
+                var $btn = $('#btnRegister');
                 var formData = $(this).serialize();
 
-                $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Sending...');
-                $('#forgotSuccess, #forgotError').addClass('d-none');
+                // Show loading state
+                $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Processing...');
 
                 $.ajax({
                     type: 'POST',
-                    url: '/Account/ForgotPasswordAjax',
+                    url: '/Account/RegisterAjax',
                     data: formData,
                     success: function (response) {
                         if (response.success) {
-                            $('#forgotSuccess').removeClass('d-none').text('Reset link sent to your email!');
-                            $btn.prop('disabled', false).html('<i class="bi bi-send me-1"></i> Send Reset Link');
-                            $('#forgotPasswordForm')[0].reset();
+                            // 1. Hide all form inputs to make room for the success message
+                            $('#registerForm .row, #registerForm .mb-3, #registerForm .mb-4').slideUp();
+                            
+                            // 2. Display a prominent and styled success message
+                            $errorDiv.removeClass('alert-danger d-none alert-sm')
+                                    .addClass('alert-success text-center p-4 fs-5')
+                                    .html('<i class="bi bi-check-circle-fill text-success" style="font-size: 3rem;"></i><br><br>Account created successfully!<br><small class="text-muted fs-6">Please verify your account to proceed.</small>');
+    
+                            // 3. Transform the Register button into a Verification button
+                            $btn.prop('disabled', false)
+                                .removeClass('btn-primary').addClass('btn-warning btn-lg mt-3')
+                                .html('Verify Account Now <i class="bi bi-shield-check ms-2"></i>')
+                                // Unbind previous "submit" events and add the verification logic
+                                .off('click').on('click', function(e) {
+                                    e.preventDefault();
+                                    verifyAccountSimulated(response.email, response.redirectUrl, $btn, $errorDiv);
+                                });
+
                         } else {
-                            $('#forgotError').removeClass('d-none').text(response.message);
-                            $btn.prop('disabled', false).html('<i class="bi bi-send me-1"></i> Send Reset Link');
+                            // Display backend errors (e.g. duplicate email)
+                            $errorDiv.removeClass('d-none').text(response.message);
+                            $btn.prop('disabled', false).text('Register & Login');
                         }
+                    },
+                    error: function () {
+                        // Handle server connection issues
+                        $errorDiv.removeClass('d-none').text('Server error. Could not process your request.');
+                        $btn.prop('disabled', false).text('Register & Login');
                     }
                 });
+            });
+
+            // --- TRICK FOR FORGOT PASSWORD (Simulated Maintenance) ---
+            $('#forgotPasswordForm').on('submit', function (e) {
+                e.preventDefault(); // Stop the actual form submission
+                var $btn = $('#btnForgot');
+
+                // Simulate that the system is trying to connect to the email server
+                $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Connecting to SMTP Server...');
+
+                // Wait 1.5 seconds for effect, then show the maintenance error
+                setTimeout(function() {
+                    $('#forgotPasswordFormContainer').hide(); // Hide the original form
+                    $('#maintenanceMessageContainer').removeClass('d-none').hide().fadeIn('slow'); // Elegantly display the maintenance message
+                }, 1500);
+            });
+
+            // Extra trick: Reset the modal to its initial state if the user closes and reopens it
+            $('#forgotPasswordModal').on('hidden.bs.modal', function () {
+                $('#forgotPasswordFormContainer').show();
+                $('#maintenanceMessageContainer').addClass('d-none');
+                $('#forgotPasswordForm')[0].reset();
+                $('#btnForgot').prop('disabled', false).html('<i class="bi bi-send me-1"></i> Send Reset Link');
             });
             
         });

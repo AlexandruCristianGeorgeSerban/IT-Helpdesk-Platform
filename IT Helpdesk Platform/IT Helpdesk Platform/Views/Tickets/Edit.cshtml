@@ -2,79 +2,77 @@
 
 @{
     ViewData["Title"] = "Edit Ticket";
-
-    Layout = "~/Views/Shared/_AdministratorLayout.cshtml";
 }
 
 <div class="container main-container mt-4">
-    <h2 class="mb-4"><i class="bi bi-pencil-square me-2"></i>Edit Ticket #@Model.Id</h2>
+    <h2 class="mb-4"><i class="bi bi-pencil-square me-2 text-primary"></i>Edit Ticket #@Model.Id</h2>
     
     <div class="content-card shadow-sm p-4 bg-white rounded" style="max-width: 900px;">
         <form asp-action="Edit">
             <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+            
             <input type="hidden" asp-for="Id" />
             <input type="hidden" asp-for="CreatedAt" />
+            <input type="hidden" asp-for="DueDate" /> <div class="mb-3">
+            <label asp-for="Title" class="form-label fw-bold">Issue Title</label>
+            <input asp-for="Title" class="form-control" />
+            <span asp-validation-for="Title" class="text-danger small"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Description" class="form-label fw-bold">Description</label>
+            <textarea asp-for="Description" class="form-control" rows="4"></textarea>
+            <span asp-validation-for="Description" class="text-danger small"></span>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <label asp-for="CategoryId" class="form-label fw-bold">Category</label>
+                <select asp-for="CategoryId" class="form-select" asp-items="ViewBag.CategoryList"></select>
+            </div>
+            <div class="col-md-4">
+                <label asp-for="Priority" class="form-label fw-bold">Priority</label>
+                <select asp-for="Priority" class="form-select">
+                    <option value="Low">Low</option>
+                    <option value="Medium">Medium</option>
+                    <option value="High">High</option>
+                    <option value="Critical">Critical</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label asp-for="Status" class="form-label fw-bold">Status</label>
+                <select asp-for="Status" class="form-select">
+                    <option value="Open">Open</option>
+                    <option value="In Progress">In Progress</option>
+                    <option value="Resolved">Resolved</option>
+                    <option value="Closed">Closed</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <label asp-for="RequesterId" class="form-label fw-bold">Requester (User)</label>
+                <select asp-for="RequesterId" class="form-select" asp-items="ViewBag.RequesterList"></select>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="AssignedAgentId" class="form-label fw-bold">Assign To (Agent)</label>
+                <select asp-for="AssignedAgentId" class="form-select" asp-items="ViewBag.AgentList">
+                    <option value="">-- Unassigned --</option>
+                </select>
+            </div>
+        </div>
             
-            <div class="mb-3">
-                <label asp-for="Title" class="form-label fw-bold">Issue Title</label>
-                <input asp-for="Title" class="form-control" />
-                <span asp-validation-for="Title" class="text-danger small"></span>
-            </div>
-
-            <div class="mb-3">
-                <label asp-for="Description" class="form-label fw-bold">Description</label>
-                <textarea asp-for="Description" class="form-control" rows="4"></textarea>
-                <span asp-validation-for="Description" class="text-danger small"></span>
-            </div>
-
-            <div class="row mb-3">
-                <div class="col-md-4">
-                    <label asp-for="CategoryId" class="form-label fw-bold">Category</label>
-                    <select asp-for="CategoryId" class="form-select" asp-items="ViewBag.CategoryId"></select>
-                </div>
-                <div class="col-md-4">
-                    <label asp-for="Priority" class="form-label fw-bold">Priority</label>
-                    <select asp-for="Priority" class="form-select">
-                        <option value="Low">Low</option>
-                        <option value="Medium">Medium</option>
-                        <option value="High">High</option>
-                        <option value="Critical">Critical</option>
-                    </select>
-                </div>
-                <div class="col-md-4">
-                    <label asp-for="Status" class="form-label fw-bold">Status</label>
-                    <select asp-for="Status" class="form-select">
-                        <option value="Open">Open</option>
-                        <option value="In Progress">In Progress</option>
-                        <option value="Resolved">Resolved</option>
-                        <option value="Closed">Closed</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="row mb-4">
-                <div class="col-md-6">
-                    <label asp-for="RequesterId" class="form-label fw-bold">Requester (User)</label>
-                    <select asp-for="RequesterId" class="form-select" asp-items="ViewBag.RequesterId"></select>
-                </div>
-                <div class="col-md-6">
-                    <label asp-for="AssignedAgentId" class="form-label fw-bold">Assign To (Agent)</label>
-                    <select asp-for="AssignedAgentId" class="form-select" asp-items="ViewBag.AssignedAgentId">
-                        <option value="">-- Unassigned --</option>
-                    </select>
-                </div>
-            </div>
-            
-            <div class="d-flex justify-content-between border-top pt-3">
-                <a asp-action="Index" class="btn btn-light border">
-                    <i class="bi bi-arrow-left me-1"></i> Back to List
-                </a>
-                <button type="submit" class="btn btn-success">
-                    <i class="bi bi-save me-1"></i> Save Changes
-                </button>
-            </div>
-        </form>
-    </div>
+        <div class="d-flex justify-content-between border-top pt-4 mt-2">
+            <a asp-action="Index" class="btn btn-light border shadow-sm px-4">
+                <i class="bi bi-arrow-left me-1"></i> Back to List
+            </a>
+            <button type="submit" class="btn btn-success shadow-sm px-4 fw-bold">
+                <i class="bi bi-save me-1"></i> Save Changes
+            </button>
+        </div>
+    </form>
+</div>
 </div>
 
 @section Scripts {

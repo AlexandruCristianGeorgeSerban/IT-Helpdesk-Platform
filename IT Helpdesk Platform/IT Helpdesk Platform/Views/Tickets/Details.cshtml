@@ -2,60 +2,244 @@
 
 @{
     ViewData["Title"] = "Ticket Details";
+    
+    string statusBadge = Model.Status switch
+    {
+        "Open" => "bg-primary",
+        "In Progress" => "bg-warning",
+        "Resolved" => "bg-success",
+        "Closed" => "bg-secondary",
+        _ => "bg-primary"
+    };
 
-    Layout = "~/Views/Shared/_AdministratorLayout.cshtml";
+    string prioBadge = Model.Priority switch
+    {
+        "Low" => "bg-secondary",
+        "Medium" => "bg-info",
+        "High" => "bg-danger",
+        "Critical" => "bg-critical",
+        _ => "bg-secondary"
+    };
+
+    bool isITStaff = User.IsInRole("Admin") || User.IsInRole("Agent");
 }
 
 <div class="container main-container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2><i class="bi bi-info-circle me-2"></i>Ticket #@Model.Id</h2>
+        <h2><i class="bi bi-info-circle me-2 text-primary"></i>Ticket #@Model.Id</h2>
+        <div>
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary shadow-sm me-2">
+                <i class="bi bi-pencil me-1"></i> Edit
+            </a>
+            <a asp-action="Index" class="btn btn-light border shadow-sm">
+                <i class="bi bi-arrow-left me-1"></i> Back
+            </a>
+        </div>
     </div>
     
-    <div class="content-card shadow-sm p-4 bg-white rounded position-relative mt-2" style="max-width: 900px;">
-        
-        @{
-            string statusBadge = Model.Status == "Closed" ? "bg-success" : (Model.Status == "In Progress" ? "bg-info" : "bg-primary");
-        }
-        <span class="position-absolute top-0 end-0 translate-middle-y badge rounded-pill @statusBadge fs-6 px-4 py-2 shadow border border-white border-3" style="margin-right: 20px;">
-            @Model.Status
-        </span>
+    <div class="row">
+        <div class="col-md-8">
+            <div class="content-card shadow-sm p-4 bg-white rounded position-relative mb-4">
+                <span class="position-absolute top-0 end-0 translate-middle-y badge rounded-pill @statusBadge fs-6 px-4 py-2 shadow border border-white border-3" style="margin-right: 20px;">
+                    @Model.Status
+                </span>
 
-        <h3 class="text-primary mb-3 mt-2">@Model.Title</h3>
-        <p class="fs-5 text-dark mb-4 p-3 bg-light rounded border">@Model.Description</p>
+                <h3 class="text-dark mb-3 mt-2">@Model.Title</h3>
+                <p class="fs-5 text-dark mb-4 p-3 bg-light rounded border" style="white-space: pre-wrap;">@Model.Description</p>
 
-        <div class="row mt-4 border-top pt-4">
-            <div class="col-md-6 mb-3">
-                <h6 class="text-muted text-uppercase fw-bold mb-3">Ticket Info</h6>
-                <dl class="row mb-0">
-                    <dt class="col-sm-4 text-muted mb-2">Category</dt>
-                    <dd class="col-sm-8 fw-bold mb-2">@Model.Category?.Name</dd>
+                @if (Model.Attachments != null && Model.Attachments.Any(a => a.CommentId == null))
+                {
+                    <div class="mb-4">
+                        <h6 class="text-muted text-uppercase fw-bold small mb-2"><i class="bi bi-paperclip"></i> Initial Attachments</h6>
+                        <div class="d-flex flex-wrap gap-2">
+                            @foreach (var attachment in Model.Attachments.Where(a => a.CommentId == null))
+                            {
+                                <a href="@attachment.FilePath" target="_blank" class="d-block">
+                                    <img src="@attachment.FilePath" alt="@attachment.FileName" class="img-thumbnail shadow-sm" style="max-height: 100px; object-fit: cover;" />
+                                </a>
+                            }
+                        </div>
+                    </div>
+                }
 
-                    <dt class="col-sm-4 text-muted mb-2">Priority</dt>
-                    <dd class="col-sm-8 fw-bold text-danger mb-2">@Model.Priority</dd>
+                <div class="row mt-4 border-top pt-4">
+                    <div class="col-md-6 mb-3">
+                        <h6 class="text-muted text-uppercase fw-bold small mb-3">Ticket Info</h6>
+                        <dl class="row mb-0">
+                            <dt class="col-sm-5 text-muted mb-2">Category</dt>
+                            <dd class="col-sm-7 fw-bold mb-2">@Model.Category?.Name</dd>
 
-                    <dt class="col-sm-4 text-muted">Created</dt>
-                    <dd class="col-sm-8 fw-bold">@Model.CreatedAt.ToString("g")</dd>
-                </dl>
+                            <dt class="col-sm-5 text-muted mb-2">Priority</dt>
+                            <dd class="col-sm-7 fw-bold mb-2">
+                                <span class="badge @prioBadge shadow-sm">@Model.Priority</span>
+                            </dd>
+
+                            <dt class="col-sm-5 text-muted">Created</dt>
+                            <dd class="col-sm-7 fw-bold">@Model.CreatedAt.ToString("MMM dd, yyyy HH:mm")</dd>
+                        </dl>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <h6 class="text-muted text-uppercase fw-bold small mb-3">People</h6>
+                        <dl class="row mb-0">
+                            <dt class="col-sm-5 text-muted mb-2">Requester</dt>
+                            <dd class="col-sm-7 fw-bold mb-2">@Model.Requester?.FirstName @Model.Requester?.LastName</dd>
+
+                            <dt class="col-sm-5 text-muted">Assigned To</dt>
+                            <dd class="col-sm-7 fw-bold">
+                                @(Model.AssignedAgent != null ? $"{Model.AssignedAgent.FirstName} {Model.AssignedAgent.LastName}" : "Unassigned")
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
             </div>
-            <div class="col-md-6 mb-3">
-                <h6 class="text-muted text-uppercase fw-bold mb-3">People</h6>
-                <dl class="row mb-0">
-                    <dt class="col-sm-4 text-muted mb-2">Requester</dt>
-                    <dd class="col-sm-8 fw-bold mb-2">@Model.Requester?.Email</dd>
 
-                    <dt class="col-sm-4 text-muted">Assigned To</dt>
-                    <dd class="col-sm-8 fw-bold">@(Model.AssignedAgent?.Email ?? "Unassigned")</dd>
-                </dl>
+            <div class="content-card shadow-sm p-4 bg-white rounded">
+                <h5 class="mb-4 fw-bold"><i class="bi bi-chat-right-text me-2 text-primary"></i>Internal Conversation</h5>
+                
+                <div id="adminChatThread" class="pe-2" style="max-height: 500px; overflow-y: auto;">
+                    @foreach (var comment in Model.Comments?.OrderBy(c => c.CreatedAt) ?? Enumerable.Empty<Comment>())
+                    {
+                        string bubbleBorder = comment.User?.Role == "Admin" ? "border-danger border-2" : (comment.User?.Role == "Agent" ? "border-success border-2" : "border-secondary-subtle");
+                        string avatarBg = comment.User?.Role == "Admin" ? "bg-danger" : (comment.User?.Role == "Agent" ? "bg-success" : "bg-primary");
+
+                        bool hasPic = false;
+                        if (!string.IsNullOrEmpty(comment.User?.ProfilePicturePath))
+                        {
+                            var path = System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "wwwroot", comment.User.ProfilePicturePath.TrimStart('/'));
+                            if (System.IO.File.Exists(path)) hasPic = true;
+                        }
+
+                        <div class="d-flex mb-4">
+                            <div class="flex-shrink-0">
+                                @if (hasPic)
+                                {
+                                    <img src="@comment.User!.ProfilePicturePath" class="rounded-circle shadow-sm" style="width: 45px; height: 45px; object-fit: cover;" alt="Avatar" />
+                                }
+                                else
+                                {
+                                    <div class="@avatarBg text-white rounded-circle d-flex align-items-center justify-content-center fw-bold shadow-sm" style="width: 45px; height: 45px;">
+                                        @(comment.User?.FirstName?[0] ?? 'U')@(comment.User?.LastName?[0] ?? 'S')
+                                    </div>
+                                }
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <div class="p-3 border rounded bg-white shadow-sm @bubbleBorder">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <strong>@(comment.User?.FirstName ?? "Unknown") @(comment.User?.LastName ?? "User")</strong>
+                                        <span class="text-muted small">@comment.CreatedAt.ToString("MMM dd, HH:mm")</span>
+                                    </div>
+                                    <p class="mb-0 text-dark">@comment.Text</p>
+
+                                    @if (comment.Attachments != null && comment.Attachments.Any())
+                                    {
+                                        <div class="mt-2 d-flex flex-wrap gap-2">
+                                            @foreach (var img in comment.Attachments)
+                                            {
+                                                <a href="@img.FilePath" target="_blank">
+                                                    <img src="@img.FilePath" class="img-thumbnail" style="max-height: 80px; object-fit: cover;">
+                                                </a>
+                                            }
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <div class="mt-4 pt-3 border-top">
+                    <div class="mb-2">
+                        <textarea id="adminCommentText" class="form-control border-primary" rows="2" placeholder="Type internal reply..."></textarea>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center gap-2">
+                            <label for="replyFiles" class="btn btn-outline-secondary btn-sm mb-0" style="cursor: pointer;">
+                                <i class="bi bi-paperclip me-1"></i> Add Files
+                            </label>
+                            <input type="file" id="replyFiles" multiple accept="image/*" class="d-none" onchange="updateFileLabel(this)" />
+                            <span id="fileChosenLabel" class="small text-muted mb-0">No file chosen</span>
+                        </div>
+                        <button class="btn btn-primary px-4 shadow-sm" onclick="sendAdminReply(@Model.Id)">
+                            <i class="bi bi-send-fill me-1"></i> Send
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
-        
-        <div class="d-flex justify-content-between border-top pt-4 mt-2">
-            <a asp-action="Index" class="btn btn-light border shadow-sm">
-                <i class="bi bi-arrow-left me-1"></i> Back to List
-            </a>
-            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary shadow-sm">
-                <i class="bi bi-pencil me-1"></i> Edit Ticket
-            </a>
+
+        <div class="col-md-4">
+            <div class="content-card border-primary border border-2 shadow-sm bg-white p-4 rounded mb-4">
+                <h6 class="mb-3 fw-bold text-primary"><i class="bi bi-lightning-charge-fill me-2"></i>Quick Update</h6>
+                <form asp-action="UpdateTicketStatus" method="post">
+                    <input type="hidden" name="TicketId" value="@Model.Id" />
+                    <input type="hidden" name="Priority" value="@Model.Priority" />
+                    <input type="hidden" name="AssignedAgentId" value="@Model.AssignedAgentId" />
+                    
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted">Ticket Status</label>
+                        <select name="Status" class="form-select shadow-none" asp-for="Status">
+                            <option value="Open">Open</option>
+                            <option value="In Progress">In Progress</option>
+                            <option value="Resolved">Resolved</option>
+                            <option value="Closed">Closed</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 fw-bold shadow-sm">
+                        <i class="bi bi-check-circle me-1"></i> Update Status
+                    </button>
+                </form>
+            </div>
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        function updateFileLabel(input) {
+            var label = document.getElementById('fileChosenLabel');
+            if (input.files && input.files.length > 0) {
+                label.textContent = input.files.length === 1 ? input.files[0].name : input.files.length + " files selected";
+            } else {
+                label.textContent = "No file chosen";
+            }
+        }
+
+        function sendAdminReply(ticketId) {
+            var text = $('#adminCommentText').val();
+            var files = $('#replyFiles')[0].files;
+
+            if (!text.trim() && files.length === 0) return;
+
+            var formData = new FormData();
+            formData.append('ticketId', ticketId);
+            formData.append('text', text);
+            
+            for (var i = 0; i < files.length; i++) {
+                formData.append('files', files[i]);
+            }
+
+            $.ajax({
+                url: '/Tickets/AddComment',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function (res) {
+                    if (res.success) {
+                        location.reload();
+                    } else {
+                        alert(res.message);
+                    }
+                },
+                error: function () {
+                    alert('An error occurred while uploading the file.');
+                }
+            });
+        }
+
+        $(document).ready(function() {
+            var thread = document.getElementById('adminChatThread');
+            if(thread) thread.scrollTop = thread.scrollHeight;
+        });
+    </script>
+}

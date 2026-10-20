@@ -1,5 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 
 namespace IT_Helpdesk_Platform.Models
 {
@@ -10,13 +12,25 @@ namespace IT_Helpdesk_Platform.Models
 
         [Required]
         [StringLength(255)]
-        public string? FileName { get; set; }
+        public string FileName { get; set; } = default!;
 
         [Required]
-        public string? FilePath { get; set; }
+        public string FilePath { get; set; } = default!;
+
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         public int TicketId { get; set; }
+
+        [ValidateNever]
+        [JsonIgnore]
         [ForeignKey("TicketId")]
         public Ticket? Ticket { get; set; }
+
+        public int? CommentId { get; set; }
+
+        [ValidateNever]
+        [JsonIgnore]
+        [ForeignKey("CommentId")]
+        public Comment? Comment { get; set; }
     }
 }

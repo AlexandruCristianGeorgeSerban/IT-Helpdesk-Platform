@@ -2,14 +2,14 @@
 
 @{
     ViewData["Title"] = "Tickets Management";
-
-    Layout = "~/Views/Shared/_AdministratorLayout.cshtml";
 }
 
 <div class="container main-container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2><i class="bi bi-ticket-detailed me-2"></i>Tickets Management</h2>
-        <a asp-action="Create" class="btn btn-primary"><i class="bi bi-ticket-detailed-fill me-1"></i> Add New Ticket</a>
+        <a asp-action="Create" class="btn btn-primary shadow-sm">
+            <i class="bi bi-ticket-detailed-fill me-1"></i> Add New Ticket
+        </a>
     </div>
 
     <div class="card shadow-sm mb-4 border-0">
@@ -17,14 +17,14 @@
             <form asp-action="Index" method="get" class="row g-3 align-items-center">
                 
                 <div class="col-md-4">
-                    <div class="input-group">
+                    <div class="input-group shadow-sm">
                         <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
                         <input type="text" name="searchString" value="@ViewData["CurrentFilter"]" class="form-control border-start-0 shadow-none" placeholder="Search by ID, Title, or Description..." />
                     </div>
                 </div>
 
                 <div class="col-md-3">
-                    <select name="statusFilter" class="form-select shadow-none">
+                    <select name="statusFilter" class="form-select shadow-sm" onchange="this.form.submit()">
                         <option value="All">All Statuses</option>
                         <option value="Open" selected="@(ViewData["StatusFilter"]?.ToString() == "Open")">Open</option>
                         <option value="In Progress" selected="@(ViewData["StatusFilter"]?.ToString() == "In Progress")">In Progress</option>
@@ -34,7 +34,7 @@
                 </div>
 
                 <div class="col-md-3">
-                    <select name="priorityFilter" class="form-select shadow-none">
+                    <select name="priorityFilter" class="form-select shadow-sm" onchange="this.form.submit()">
                         <option value="All">All Priorities</option>
                         <option value="Low" selected="@(ViewData["PriorityFilter"]?.ToString() == "Low")">Low</option>
                         <option value="Medium" selected="@(ViewData["PriorityFilter"]?.ToString() == "Medium")">Medium</option>
@@ -44,118 +44,137 @@
                 </div>
 
                 <div class="col-md-2 d-flex gap-2">
-                    <button type="submit" class="btn btn-primary w-100 rounded-pill">Filter</button>
+                    <button type="submit" class="btn btn-primary w-100 rounded shadow-sm">Filter</button>
                     @if (ViewData["CurrentFilter"] != null || ViewData["StatusFilter"] != null || ViewData["PriorityFilter"] != null)
                     {
-                        <a asp-action="Index" class="btn btn-light rounded-pill px-3">Clear</a>
+                        <a asp-action="Index" class="btn btn-light rounded border shadow-sm px-3" title="Clear Filters"><i class="bi bi-x-lg"></i></a>
                     }
                 </div>
             </form>
         </div>
     </div>
 
-    <div class="content-card table-shadow p-4 bg-white rounded">
-        <table class="table table-hover align-middle">
-            <thead class="table-light">
-                <tr>
-                    <th style="width: 5%;">ID</th>
-                    <th style="width: 25%;">Ticket Info</th>
-                    <th>Category</th>
-                    <th>Status</th>
-                    <th>Priority</th>
-                    <th>Requester</th>
-                    <th>Agent</th>
-                    <th>Due Date</th>
-                    <th class="text-end">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var item in Model)
-                {
+    <div class="content-card shadow-sm p-4 bg-white rounded">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light text-secondary">
                     <tr>
-                        <td class="text-muted fw-bold">#@item.Id</td>
-                        <td>
-                            <div class="fw-bold text-dark">@Html.DisplayFor(modelItem => item.Title)</div>
-                            <div class="small text-muted"><i class="bi bi-clock me-1"></i>@item.CreatedAt.ToString("MMM dd, yyyy HH:mm")</div>
-                        </td>
-                        <td>@item.Category?.Name</td>
-                        <td>
-                            @{
-                                string statusBadge = item.Status switch
-                                {
-                                    "Open" => "bg-primary",
-                                    "In Progress" => "bg-warning",
-                                    "Resolved" => "bg-success",
-                                    "Closed" => "bg-secondary",
-                                    _ => "bg-primary"
-                                };
-                            }
-                            <span class="badge @statusBadge shadow-sm">@item.Status</span>
-                        </td>
-                        <td>
-                            @{
-                                string prioBadge = item.Priority switch
-                                {
-                                    "Low" => "bg-secondary",
-                                    "Medium" => "bg-info",
-                                    "High" => "bg-danger",
-                                    "Critical" => "bg-critical",
-                                    _ => "bg-secondary"
-                                };
-                            }
-                            <span class="badge @prioBadge shadow-sm">@item.Priority</span>
-                        </td>
-                        <td>@item.Requester?.Email</td>
-                        
-                        <td>
-                            @if (item.AssignedAgent != null)
-                            {
-                                <span class="text-success"><i class="bi bi-person-check-fill me-1"></i>@item.AssignedAgent.FirstName</span>
-                            }
-                            else
-                            {
-                                <span class="text-muted small"><i>Unassigned</i></span>
-                            }
-                        </td>
-                        
-                        <td>
-                            @if (item.DueDate.HasValue)
-                            {
-                                <span class="@(item.DueDate.Value < DateTime.Now && item.Status != "Closed" && item.Status != "Resolved" ? "text-danger fw-bold" : "text-muted")">
-                                    @item.DueDate.Value.ToString("MMM dd")
-                                </span>
-                            }
-                            else
-                            {
-                                <span>-</span>
-                            }
-                        </td>
-
-                        <td class="text-end">
-                            <div class="d-flex justify-content-end gap-2">
-                                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary shadow-sm" title="Edit">
-                                    <i class="bi bi-pencil-square"></i>
-                                </a>
-                                <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-success shadow-sm" title="Details">
-                                    <i class="bi bi-info-circle"></i>
-                                </a>
-                                <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger shadow-sm" title="Delete">
-                                    <i class="bi bi-trash"></i>
-                                </a>
-                            </div>
-                        </td>
+                        <th>ID</th>
+                        <th>Ticket Info</th>
+                        <th>Category</th>
+                        <th>Status</th>
+                        <th>Priority</th>
+                        <th>Requester</th>
+                        <th>Agent</th>
+                        <th>Due Date</th>
+                        <th class="text-end">Actions</th>
                     </tr>
-                }
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td class="text-muted fw-bold">#@item.Id</td>
+                            <td>
+                                <div class="fw-bold text-dark text-truncate" style="max-width: 220px;" title="@item.Title">@item.Title</div>
+                                <div class="small text-muted"><i class="bi bi-clock me-1"></i>@item.CreatedAt.ToString("MMM dd, yyyy HH:mm")</div>
+                            </td>
+                            <td><span class="text-secondary small fw-bold">@item.Category?.Name</span></td>
+                            <td>
+                                @{
+                                    string statusBadge = item.Status switch
+                                    {
+                                        "Open" => "bg-primary",
+                                        "In Progress" => "bg-warning",
+                                        "Resolved" => "bg-success",
+                                        "Closed" => "bg-secondary",
+                                        _ => "bg-primary"
+                                    };
+                                }
+                                <span class="badge @statusBadge shadow-sm">@item.Status</span>
+                            </td>
+                            <td>
+                                @{
+                                    string prioBadge = item.Priority switch
+                                    {
+                                        "Low" => "bg-secondary",
+                                        "Medium" => "bg-info",
+                                        "High" => "bg-danger",
+                                        "Critical" => "bg-critical",
+                                        _ => "bg-secondary"
+                                    };
+                                }
+                                <span class="badge @prioBadge shadow-sm">@item.Priority</span>
+                            </td>
+                            
+                            <td>
+                                @if (item.Requester != null)
+                                {
+                                    <span class="text-dark small fw-bold d-block">@item.Requester.FirstName</span>
+                                    <span class="text-dark small fw-bold d-block">@item.Requester.LastName</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted small">Unknown</span>
+                                }
+                            </td>
+                            
+                            <td>
+                                @if (item.AssignedAgent != null)
+                                {
+                                    <div class="text-success agent-text small fw-bold d-flex align-items-start">
+                                        <i class="bi bi-person-check-fill me-1"></i>
+                                        <div>
+                                            <span class="d-block">@item.AssignedAgent.FirstName</span>
+                                            <span class="d-block">@item.AssignedAgent.LastName</span>
+                                        </div>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <span class="text-muted small"><i>Unassigned</i></span>
+                                }
+                            </td>
+                            
+                            <td>
+                                @if (item.DueDate.HasValue)
+                                {
+                                    <span class="@(item.DueDate.Value < DateTime.Now && item.Status != "Closed" && item.Status != "Resolved" ? "text-danger fw-bold" : "text-muted small")">
+                                        @item.DueDate.Value.ToString("MMM dd")
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">-</span>
+                                }
+                            </td>
 
-        @if (!Model.Any())
-        {
-            <div class="text-center py-5">
-                <i class="bi bi-inbox text-muted" style="font-size: 3rem;"></i>
-                <p class="text-muted mt-2 mb-0">No tickets found matching your criteria.</p>
-            </div>
-        }
+                            <td class="text-end">
+                                <div class="d-flex justify-content-end gap-2">
+                                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary shadow-sm" title="Edit">
+                                        <i class="bi bi-pencil-square"></i> Edit
+                                    </a>
+                                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-success shadow-sm" title="Details">
+                                        <i class="bi bi-info-circle"></i> Details
+                                    </a>
+                                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger shadow-sm" title="Delete">
+                                        <i class="bi bi-trash"></i> Delete
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+            @if (!Model.Any())
+            {
+                <div class="text-center py-5">
+                    <i class="bi bi-inbox text-muted" style="font-size: 3rem;"></i>
+                    <p class="text-muted mt-2 mb-0">No tickets found matching your criteria.</p>
+                </div>
+            }
+        </div>
     </div>
 </div>
 

@@ -1,97 +1,150 @@
 ﻿using IT_Helpdesk_Platform.Models;
-using IT_Helpdesk_Platform.Repositories.Interfaces;
 using IT_Helpdesk_Platform.Services.Interfaces;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace IT_Helpdesk_Platform.Services
 {
     public class UserService : IUserService
     {
-        private readonly IRepositoryWrapper _wrapper;
+        private readonly UserManager<User> _userManager;
+        private readonly RoleManager<IdentityRole<int>> _roleManager;
+        private readonly HelpdeskContext _context;
 
-        public UserService(IRepositoryWrapper wrapper) => _wrapper = wrapper;
-
-        public User? Authenticate(string email, string password) =>
-            _wrapper.User.GetUserByEmailAndPassword(email, password);
-
-        public (bool Success, string Message) RegisterNewUser(string firstName, string lastName, int departmentId, string email, string password, string confirmPassword)
+        public UserService(UserManager<User> userManager, RoleManager<IdentityRole<int>> roleManager, HelpdeskContext context)
         {
-            if (password != confirmPassword) return (false, "Passwords do not match!");
-            if (_wrapper.User.EmailExists(email)) return (false, "This email is already in use.");
-
-            var newUser = new User
-            {
-                FirstName = firstName,
-                LastName = lastName,
-                DepartmentId = departmentId,
-                Email = email,
-                PasswordHash = password,
-                Role = "User"
-            };
-
-            _wrapper.User.Create(newUser);
-            _wrapper.Save();
-
-            return (true, "Account created successfully.");
+            _userManager = userManager;
+            _roleManager = roleManager;
+            _context = context;
         }
 
-        public IEnumerable<User> GetAllUsers(string? searchString = null)
+        public async Task<IEnumerable<User>> GetFilteredUsersAsync(string? searchString)
         {
-            var query = _wrapper.User.FindAll().Include(u => u.Department).AsQueryable();
+            var query = _userManager.Users.Include(u => u.Department).AsQueryable();
 
             if (!string.IsNullOrEmpty(searchString))
             {
                 query = query.Where(u => u.FirstName!.Contains(searchString)
                                       || u.LastName!.Contains(searchString)
-                                      || u.Email!.Contains(searchString)
-                                      || u.Id.ToString() == searchString);
+                                      || u.Email!.Contains(searchString));
             }
 
-            return query.OrderBy(u => u.FirstName).ToList();
+            return await query.ToListAsync();
         }
 
-        public IEnumerable<User> GetSupportStaff() =>
-            _wrapper.User.FindAll().Where(u => u.Role == "Agent" || u.Role == "Admin").ToList();
-
-        public User? GetUserById(int id) => _wrapper.User.GetUserByIdWithDetails(id);
-
-        public void CreateUser(User user)
+        public async Task<User?> GetUserByIdWithDepartmentAsync(int id)
         {
-            _wrapper.User.Create(user);
-            _wrapper.Save();
+            return await _userManager.Users
+                                     .Include(u => u.Department)
+                                     .FirstOrDefaultAsync(u => u.Id == id);
         }
 
-        public void UpdateUser(User user, string? newPassword = null)
+        public async Task<IEnumerable<string>> GetUserRolesAsync(User user)
         {
-            if (string.IsNullOrEmpty(newPassword))
-            {
-                var existingUser = _wrapper.User.FindByCondition(u => u.Id == user.Id).FirstOrDefault();
-                if (existingUser != null)
-                {
-                    user.PasswordHash = existingUser.PasswordHash;
-                }
-            }
-            else
-            {
-                user.PasswordHash = newPassword;
-            }
-
-            _wrapper.User.Update(user);
-            _wrapper.Save();
+            return await _userManager.GetRolesAsync(user);
         }
 
-        public void DeleteUser(int id)
+        public async Task<IEnumerable<string>> GetAllRolesAsync()
         {
-            var user = GetUserById(id);
-            if (user != null)
-            {
-                _wrapper.User.Delete(user);
-                _wrapper.Save();
-            }
+            return await _roleManager.Roles.Select(r => r.Name!).ToListAsync();
         }
 
-        public bool UserExists(int id) => _wrapper.User.FindByCondition(u => u.Id == id).Any();
+        public async Task<IdentityResult> UpdateUserWithRoleAsync(User formUser, string selectedRole, string? newPassword)
+        {
+            var existingUser = await _userManager.FindByIdAsync(formUser.Id.ToString());
+            if (existingUser == null) return IdentityResult.Failed(new IdentityError { Description = "User not found" });
+
+            existingUser.FirstName = formUser.FirstName;
+            existingUser.LastName = formUser.LastName;
+            existingUser.Email = formUser.Email;
+            existingUser.UserName = formUser.Email;
+            existingUser.PhoneNumber = formUser.PhoneNumber;
+            existingUser.DepartmentId = formUser.DepartmentId;
+            existingUser.Role = selectedRole;
+
+            if (!string.IsNullOrEmpty(newPassword))
+            {
+                var token = await _userManager.GeneratePasswordResetTokenAsync(existingUser);
+                var passResult = await _userManager.ResetPasswordAsync(existingUser, token, newPassword);
+                if (!passResult.Succeeded) return passResult;
+            }
+
+            var updateResult = await _userManager.UpdateAsync(existingUser);
+            if (!updateResult.Succeeded) return updateResult;
+
+            var currentRoles = await _userManager.GetRolesAsync(existingUser);
+            if (!currentRoles.Contains(selectedRole))
+            {
+                await _userManager.RemoveFromRolesAsync(existingUser, currentRoles);
+                await _userManager.AddToRoleAsync(existingUser, selectedRole);
+            }
+
+            return IdentityResult.Success;
+        }
+
+        public async Task<IdentityResult> CreateUserWithRoleAsync(User user, string password, string role)
+        {
+            user.UserName = user.Email;
+            user.Role = role;
+            user.EmailConfirmed = true;
+
+            var result = await _userManager.CreateAsync(user, password);
+            if (result.Succeeded)
+            {
+                await _userManager.AddToRoleAsync(user, role);
+            }
+            return result;
+        }
+
+        public async Task<IdentityResult> DeleteUserAsync(int id)
+        {
+            var user = await _userManager.FindByIdAsync(id.ToString());
+            if (user == null) return IdentityResult.Failed(new IdentityError { Description = "User not found" });
+
+            if (!string.IsNullOrEmpty(user.ProfilePicturePath))
+            {
+                string filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", user.ProfilePicturePath.TrimStart('/'));
+                if (File.Exists(filePath)) File.Delete(filePath);
+            }
+
+            var assignedTickets = await _context.Tickets.Where(t => t.AssignedAgentId == id).ToListAsync();
+            foreach (var ticket in assignedTickets) ticket.AssignedAgentId = null;
+
+            var userComments = await _context.Comments
+                .Include(c => c.Attachments)
+                .Where(c => c.UserId == id)
+                .ToListAsync();
+
+            var submittedTickets = await _context.Tickets
+                .Include(t => t.Attachments)
+                .Include(t => t.Comments)
+                    .ThenInclude(c => c.Attachments)
+                .Where(t => t.RequesterId == id)
+                .ToListAsync();
+
+            var allAttachmentsToDelete = userComments.SelectMany(c => c.Attachments!)
+                .Concat(submittedTickets.SelectMany(t => t.Attachments!))
+                .Concat(submittedTickets.SelectMany(t => t.Comments!).SelectMany(c => c.Attachments!))
+                .ToList();
+
+            foreach (var attachment in allAttachmentsToDelete)
+            {
+                string path = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", attachment.FilePath.TrimStart('/'));
+                if (File.Exists(path)) File.Delete(path);
+            }
+
+            _context.Attachments.RemoveRange(allAttachmentsToDelete);
+            _context.Comments.RemoveRange(submittedTickets.SelectMany(t => t.Comments));
+            _context.Comments.RemoveRange(userComments);
+            _context.Tickets.RemoveRange(submittedTickets);
+
+            await _context.SaveChangesAsync();
+
+            return await _userManager.DeleteAsync(user);
+        }
     }
 }

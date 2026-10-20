@@ -2,8 +2,6 @@
 
 @{
     ViewData["Title"] = "Create User";
-
-    Layout = "~/Views/Shared/_AdministratorLayout.cshtml";
 }
 
 <div class="container main-container mt-4">
@@ -36,7 +34,12 @@
 
                     <div class="mb-4">
                         <label asp-for="PasswordHash" class="form-label fw-bold">Password</label>
-                        <input asp-for="PasswordHash" class="form-control" type="password" placeholder="Enter a secure password..." />
+                        <div class="input-group">
+                            <input asp-for="PasswordHash" id="PasswordHash" class="form-control" type="password" placeholder="Enter a secure password..." />
+                            <span class="input-group-text password-toggle-icon" onclick="togglePassword('PasswordHash', 'toggleIcon')">
+                                <i class="bi bi-eye" id="toggleIcon"></i>
+                            </span>
+                        </div>
                         <span asp-validation-for="PasswordHash" class="text-danger small"></span>
                     </div>
 
@@ -74,4 +77,19 @@
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
+    <script>
+        function togglePassword(inputId, iconId) {
+            const input = document.getElementById(inputId);
+            const icon = document.getElementById(iconId);
+            if (input.type === "password") {
+                input.type = "text";
+                icon.classList.remove("bi-eye");
+                icon.classList.add("bi-eye-slash");
+            } else {
+                input.type = "password";
+                icon.classList.remove("bi-eye-slash");
+                icon.classList.add("bi-eye");
+            }
+        }
+    </script>
 }

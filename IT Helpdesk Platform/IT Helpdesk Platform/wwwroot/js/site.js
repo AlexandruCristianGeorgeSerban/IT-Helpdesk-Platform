@@ -160,3 +160,23 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     }
 });
+
+function verifyAccountSimulated(email, redirectUrl, $btn, $errorDiv) {
+    // Show a "verifying" state
+    $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Verifying...');
+
+    $.post('/Account/VerifyAccountManual', { email: email }, function (res) {
+        if (res.success) {
+            // Update the UI to show the final success state
+            $errorDiv.removeClass('alert-warning').addClass('alert-success')
+                .html('<i class="bi bi-shield-check text-success" style="font-size: 3rem;"></i><br><br>Identity Verified!<br><small class="text-muted fs-6">Redirecting to your dashboard...</small>');
+
+            $btn.fadeOut(500, function () {
+                window.location.href = redirectUrl;
+            });
+        } else {
+            $errorDiv.removeClass('alert-success').addClass('alert-danger').text('Verification failed. Please try again.');
+            $btn.prop('disabled', false).text('Verify Account Now');
+        }
+    });
+}

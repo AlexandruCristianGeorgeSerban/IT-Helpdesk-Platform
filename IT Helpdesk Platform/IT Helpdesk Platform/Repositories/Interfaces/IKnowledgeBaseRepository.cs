@@ -1,5 +1,4 @@
 ﻿using IT_Helpdesk_Platform.Models;
-using System.Threading.Tasks;
 
 namespace IT_Helpdesk_Platform.Repositories.Interfaces
 {

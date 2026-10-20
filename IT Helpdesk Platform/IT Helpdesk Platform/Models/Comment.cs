@@ -9,7 +9,7 @@ namespace IT_Helpdesk_Platform.Models
         public int Id { get; set; }
 
         [Required]
-        public string? Content { get; set; }
+        public string Text { get; set; } = default!;
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
@@ -20,5 +20,7 @@ namespace IT_Helpdesk_Platform.Models
         public int UserId { get; set; }
         [ForeignKey("UserId")]
         public User? User { get; set; }
+
+        public ICollection<Attachment>? Attachments { get; set; }
     }
 }

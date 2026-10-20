@@ -1,7 +1,5 @@
 ﻿using IT_Helpdesk_Platform.Models;
 using IT_Helpdesk_Platform.Repositories.Interfaces;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace IT_Helpdesk_Platform.Services
 {

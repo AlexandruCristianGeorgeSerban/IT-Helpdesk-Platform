@@ -1,5 +1,4 @@
 ﻿using IT_Helpdesk_Platform.Models;
-using System.Collections.Generic;
 
 namespace IT_Helpdesk_Platform.Services.Interfaces
 {

@@ -1,8 +1,6 @@
 ﻿using IT_Helpdesk_Platform.Models;
 using IT_Helpdesk_Platform.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace IT_Helpdesk_Platform.Repositories
 {
@@ -12,10 +10,16 @@ namespace IT_Helpdesk_Platform.Repositories
 
         public IQueryable<Ticket> GetQueryableTicketsWithDetails() =>
             FindAll()
+                .AsNoTracking()
                 .Include(t => t.AssignedAgent)
                 .Include(t => t.Category)
                 .Include(t => t.Requester)
-                .ThenInclude(u => u!.Department);
+                    .ThenInclude(u => u!.Department)
+                .Include(t => t.Attachments)
+                .Include(t => t.Comments)
+                    .ThenInclude(c => c.User)
+                .Include(t => t.Comments)
+                    .ThenInclude(c => c.Attachments);
 
         public async Task<Ticket?> GetTicketByIdAsync(int id) =>
             await GetQueryableTicketsWithDetails().FirstOrDefaultAsync(t => t.Id == id);

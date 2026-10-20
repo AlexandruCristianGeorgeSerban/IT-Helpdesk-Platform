@@ -4,22 +4,16 @@ A modern, responsive, and role-based IT Support Ticketing and Knowledge Base man
 
 This platform streamlines the process of reporting IT issues, requesting hardware/software, and provides a self-service Knowledge Base to reduce the volume of support tickets.
 
-## 🚧 Current Project Status (Milestone 3)
+## 🚀 Current Project Status (Milestone 4 - Final)
 
-**Important Note for Evaluation:** The project is currently at the **Milestone 3** stage. 
-* The full Identity and Authentication system (Login/Register) is scheduled for **Milestone 4**.
-* At this current stage, the **Role-Based Access Control is simulated for UI/UX demonstration purposes**. 
-* To preview the custom navigation bars, colors, and layouts for each specific user type, you can manually navigate to the following routes:
-  * **Guest (Default):** `/Home/GuestDashboard`
-  * **User:** `/Home/UserDashboard`
-  * **IT Agent:** `/Home/AgentDashboard`
-  * **Administrator:** `/Home/AdministratorDashboard`
+The project has successfully reached **Milestone 4**. The full **ASP.NET Core Identity** and Authentication system is now securely integrated.
 
-### ⚠️ Known Limitations (To be addressed in Milestone 4)
-Because the full **Identity & Authentication** system is scheduled for the next milestone, the following temporary behaviors are in place:
-* **Simulated Sessions:** Since there is no "Logged In" user yet, the **My Profile** and **Ticket Submission** pages use placeholder logic (defaulting to User ID 1) to demonstrate database connectivity.
-* **Open Navigation:** Route protection (Authorization) is not yet enforced. You can manually navigate between all dashboards using the URLs provided below.
-* **Audit Trails:** Ticket comments and status changes do not yet capture the "Current User," as a security context does not exist.
+### ✨ Key Features Implemented in Milestone 4:
+* **Robust Authentication & Security:** Fully functional Login, Registration, and session management using ASP.NET Core Identity. Passwords are securely hashed.
+* **Role-Based Access Control (RBAC):** Strict route protection using `[Authorize(Roles = "...")]`. Users cannot access unauthorized dashboards or endpoints by typing URLs.
+* **Dynamic Database Seeding:** On the first run, the database is automatically populated with Departments, Categories, Roles, Knowledge Articles, realistic Tickets, threaded Comments, and default user accounts.
+* **File Management:** Users can upload profile pictures, and users/agents can attach images to ticket comments. The system includes fallback UI elements if files are deleted from the server.
+* **Data Integrity:** Eliminated Entity Framework tracking collisions, created safe navigation fallbacks, and handled Null Reference Exceptions for a crash-free experience.
 
 ## ⚙️ Prerequisites
 
@@ -28,62 +22,58 @@ To run this project locally, you will need the following tools installed on your
 * **IDE:** [Visual Studio Community 2026](https://visualstudio.microsoft.com/)
 * **Framework:** [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
 
-## 👥 User Roles & Capabilities (UI/UX Implemented)
+## 🔑 Default Test Accounts (Generated via Seeder)
 
-The application features a strict Role-Based Access Control (RBAC) system. The UI, dashboards, and available actions are tailored for each role:
+When you first run the application, the database seeder automatically creates the following accounts. You can use these to test the different role-based dashboards:
+
+* **Administrator:** `admin@helpdesk.com` / `Admin123!`
+* **IT Agent:** `agent@helpdesk.com` / `Agent123!`
+* **Standard User:** `user@helpdesk.com` / `User123!`
+
+## 👥 User Roles & Capabilities
+
+The application features a strict Role-Based Access Control (RBAC) system. The UI, dashboards, and available actions are dynamically tailored for each role:
 
 ### 1. Guest (Unauthenticated Visitor)
-* **Dashboard:** Neutral/Gray Theme
-* **Capabilities:**
-  * View the Guest Landing Page.
-  * Browse and read public guides in the **Knowledge Base** without needing an account.
-  * Access the **Sign In** portal to authenticate.
+* View the Guest Landing Page.
+* Browse and read public guides in the **Knowledge Base** without needing an account.
 
 ### 2. User (Standard Employee)
-* **Dashboard:** Blue Theme (Support Portal)
-* **Capabilities:**
-  * **Submit Tickets:** Request hardware, software, or report IT issues.
-  * **My Tickets:** View the status, priority, and updates of their own submitted tickets.
-  * **Communication:** Add comments/replies to their active tickets.
-  * **Knowledge Base:** Full read access to self-service articles.
-  * *Restriction:* Cannot view other employees' tickets or access management panels.
+* **Submit Tickets:** Request hardware, software, or report IT issues.
+* **My Tickets:** View the status, priority, and updates of their own submitted tickets.
+* **Communication:** Add comments, replies, and file attachments to their active tickets.
+* **Profile Management:** Update contact info, preferences, and profile avatar.
 
 ### 3. IT Agent (Support Technician)
-* **Dashboard:** Green Theme (Agent Dashboard with SLA metrics)
-* **Capabilities:**
-  * **All Tickets:** View and manage tickets submitted by all users across the company.
-  * **Ticket Management:** Update ticket Status (e.g., *Open* -> *In Progress* -> *Resolved*).
-  * **Prioritization:** Adjust ticket Priority based on urgency.
-  * **Communication:** Provide technical support via comments on tickets.
-  * **Knowledge Base:** Read access to share articles with users.
-  * *Restriction:* Cannot permanently delete tickets or modify system architecture.
+* **All Tickets:** View, search, and manage tickets submitted by all users across the company.
+* **Ticket Management:** Update ticket Status (e.g., *Open* -> *In Progress* -> *Resolved*), Priority, and Assigned Agent.
+* **Communication:** Provide technical support via comments and attachments.
 
 ### 4. Administrator (System Admin / IT Manager)
-* **Dashboard:** Red Theme (Administrator Platform)
-* **Capabilities:**
-  * **Full System Control:** Access to the overarching management dashboard.
-  * **Users:** Manage staff, create new accounts, and assign roles.
-  * **Departments:** Full CRUD (Create, Read, Update, Delete) operations for company departments.
-  * **Categories:** Manage issue classifications for the ticketing system.
-  * **Knowledge Articles:** Full CRUD operations to populate and format the Knowledge Base.
-  * **Tickets:** Complete oversight of all tickets, including the ability to permanently delete spam or invalid requests.
-  * **All Tickets:** View and manage tickets submitted by all users across the company.
-  * **Ticket Management:** Update ticket Status (e.g., *Open* -> *In Progress* -> *Resolved*).
+* **Full System Control:** Access to the overarching management dashboard.
+* **Users Management:** View staff, edit profiles, and manage active accounts.
+* **System Architecture:** Full CRUD operations for company **Departments** and ticket **Categories**.
+* **Knowledge Articles:** Full CRUD operations to populate and format the Knowledge Base.
+* **Tickets:** Complete oversight and deletion rights for all tickets.
 
 ## 🚀 Getting Started
 
-1. Clone the repository to your local machine.
+1. Clone the repository.
 2. Open the solution file (`IT Helpdesk Platform.slnx`) in **Visual Studio 2026**.
-3. Build and run the project (F5).
-4. (Optional) Open the provided `IT Helpdesk Database.mwb` in **MySQL Workbench** or `Database Diagram.png` to see the database schema and visual tables diagram.
+3. Open the **Package Manager Console (PMC)** and run: `Update-Database`
 
 ## 🛠️ Troubleshooting (For Evaluators)
 
 If you encounter database-related errors during runtime (e.g., missing tables, "Pending Model Changes", or Entity Framework exceptions), your local database schema is likely out of sync with the C# models. 
 
-You can fix this using the **Package Manager Console (PMC)** in Visual Studio (`Tools` -> `NuGet Package Manager` -> `Package Manager Console`):
+**⚠️ IMPORTANT FOR EVALUATORS (Previous Milestones):**
+If you have previously evaluated this project during **Milestone 2 or 3**, you **must delete the old database** before running this version. The new ASP.NET Core Identity integration drastically changes the database schema and will conflict with the old tables.
+1. Open **SQL Server Object Explorer** in Visual Studio.
+2. Find the old database, right-click it, and select **Delete** (make sure to check "Close existing connections").
 
-**Fix 1: Apply existing migrations** Run the following command to update your local database based on the existing migration files:
+After deleting the old database (or if you are running it for the first time), you can fix sync issues using the **Package Manager Console (PMC)** in Visual Studio (`Tools` -> `NuGet Package Manager` -> `Package Manager Console`):
+
+**Fix 1: Apply existing migrations** Run the following command to update your local database based on the existing migration files and trigger the seeder:
 `Update-Database`
 
 **Fix 2: Generate a new migration (If Fix 1 fails)**
@@ -92,5 +82,3 @@ If `Update-Database` doesn't work or says there are no migrations, your local en
 `Add-Migration SyncLocalDb`
 
 `Update-Database`
-
-**Note:** For the **My Profile** page to load, ensure at least one user exists in your database with ID 1.

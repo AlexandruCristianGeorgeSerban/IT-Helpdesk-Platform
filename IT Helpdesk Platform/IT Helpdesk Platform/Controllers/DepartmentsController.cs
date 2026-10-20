@@ -1,9 +1,11 @@
 ﻿using IT_Helpdesk_Platform.Models;
 using IT_Helpdesk_Platform.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace IT_Helpdesk_Platform.Controllers
 {
+    [Authorize(Roles = "Admin")]
     public class DepartmentsController : Controller
     {
         private readonly IDepartmentService _departmentService;
@@ -13,7 +15,6 @@ namespace IT_Helpdesk_Platform.Controllers
             _departmentService = departmentService;
         }
 
-        // GET: Departments
         public IActionResult Index(string? searchString)
         {
             ViewData["CurrentFilter"] = searchString;
@@ -21,7 +22,6 @@ namespace IT_Helpdesk_Platform.Controllers
             return View(departments);
         }
 
-        // GET: Departments/Details/5
         public IActionResult Details(int? id)
         {
             if (id == null) return NotFound();
@@ -32,13 +32,11 @@ namespace IT_Helpdesk_Platform.Controllers
             return View(department);
         }
 
-        // GET: Departments/Create
         public IActionResult Create()
         {
             return View();
         }
 
-        // POST: Departments/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult Create([Bind("Id,Name")] Department department)
@@ -51,7 +49,6 @@ namespace IT_Helpdesk_Platform.Controllers
             return View(department);
         }
 
-        // GET: Departments/Edit/5
         public IActionResult Edit(int? id)
         {
             if (id == null) return NotFound();
@@ -62,7 +59,6 @@ namespace IT_Helpdesk_Platform.Controllers
             return View(department);
         }
 
-        // POST: Departments/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult Edit(int id, [Bind("Id,Name")] Department department)
@@ -85,7 +81,6 @@ namespace IT_Helpdesk_Platform.Controllers
             return View(department);
         }
 
-        // GET: Departments/Delete/5
         public IActionResult Delete(int? id)
         {
             if (id == null) return NotFound();
@@ -96,7 +91,6 @@ namespace IT_Helpdesk_Platform.Controllers
             return View(department);
         }
 
-        // POST: Departments/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public IActionResult DeleteConfirmed(int id)

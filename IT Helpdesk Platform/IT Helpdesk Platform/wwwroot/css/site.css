@@ -1,6 +1,11 @@
 /* IT Helpdesk Platform */
 
 /* --- Base Elements & Layout --- */
+input::-ms-reveal,
+input::-ms-clear {
+    display: none;
+}
+
 html {
     font-size: 14px;
     overflow-y: scroll;
@@ -67,12 +72,13 @@ body {
 .navbar-brand {
     font-weight: bold;
     color: #0d6efd !important;
+    transition: transform 0.15s ease-in-out;
 }
 
 /* Inactive pages color */
 .custom-nav-link {
     color: #9b9d9e !important;
-    transition: color 0.25s ease-in-out;
+    transition: color 0.25s ease-in-out, transform 0.15s ease-in-out;
     text-decoration: none;
 }
 
@@ -85,6 +91,13 @@ body {
     .custom-nav-link.active-page {
         color: #ffffff !important;
         font-weight: 600;
+    }
+
+    /* Active page shrink effect */
+    .custom-nav-link:active,
+    .navbar-brand:active,
+    #darkModeToggle:active {
+        transform: scale(0.95);
     }
 
 /* Guest Active Page Navigation */
@@ -264,6 +277,11 @@ body {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4) !important;
 }
 
+/* Custom color for Assigned Agent text to be visible on dark backgrounds */
+[data-bs-theme="dark"] .agent-text {
+    color: #75b798 !important;
+}
+
 /* Urgent Assistance Alert styling */
 [data-bs-theme="dark"] .alert {
     border: 1px solid rgba(255, 255, 255, 0.2) !important;
@@ -280,6 +298,17 @@ body {
 
     [data-bs-theme="dark"] .alert-success .btn-close {
         filter: invert(1) grayscale(100%) brightness(200%) !important;
+    }
+
+/* Specific styles for the Error Toast in dark mode */
+[data-bs-theme="dark"] .toast.bg-danger {
+    background-color: rgba(220, 53, 69, 0.25) !important;
+    border: 1px solid rgba(220, 53, 69, 0.5) !important;
+}
+
+    [data-bs-theme="dark"] .toast.bg-danger,
+    [data-bs-theme="dark"] .toast.bg-danger .text-white {
+        color: #ff99a2 !important;
     }
 
 /* Buttons */

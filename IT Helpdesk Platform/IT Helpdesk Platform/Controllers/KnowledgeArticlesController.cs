@@ -1,11 +1,12 @@
-﻿using System.Threading.Tasks;
+﻿using IT_Helpdesk_Platform.Models;
+using IT_Helpdesk_Platform.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using IT_Helpdesk_Platform.Models;
-using IT_Helpdesk_Platform.Services.Interfaces;
 
 namespace IT_Helpdesk_Platform.Controllers
 {
+    [Authorize(Roles = "Admin")]
     public class KnowledgeArticlesController : Controller
     {
         private readonly IKnowledgeBaseService _knowledgeArticleService;

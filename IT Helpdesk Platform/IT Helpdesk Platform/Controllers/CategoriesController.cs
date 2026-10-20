@@ -1,9 +1,11 @@
 using IT_Helpdesk_Platform.Models;
 using IT_Helpdesk_Platform.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace IT_Helpdesk_Platform.Controllers
 {
+    [Authorize(Roles = "Admin")]
     public class CategoriesController : Controller
     {
         private readonly ICategoryService _categoryService;
@@ -13,7 +15,6 @@ namespace IT_Helpdesk_Platform.Controllers
             _categoryService = categoryService;
         }
 
-        // GET: Categories
         public IActionResult Index(string? searchString)
         {
             ViewData["CurrentFilter"] = searchString;
@@ -21,7 +22,6 @@ namespace IT_Helpdesk_Platform.Controllers
             return View(categories);
         }
 
-        // GET: Categories/Details/5
         public IActionResult Details(int? id)
         {
             if (id == null) return NotFound();
@@ -32,13 +32,11 @@ namespace IT_Helpdesk_Platform.Controllers
             return View(category);
         }
 
-        // GET: Categories/Create
         public IActionResult Create()
         {
             return View();
         }
 
-        // POST: Categories/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult Create([Bind("Id,Name")] Category category)
@@ -51,7 +49,6 @@ namespace IT_Helpdesk_Platform.Controllers
             return View(category);
         }
 
-        // GET: Categories/Edit/5
         public IActionResult Edit(int? id)
         {
             if (id == null) return NotFound();
@@ -62,7 +59,6 @@ namespace IT_Helpdesk_Platform.Controllers
             return View(category);
         }
 
-        // POST: Categories/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult Edit(int id, [Bind("Id,Name")] Category category)
@@ -85,7 +81,6 @@ namespace IT_Helpdesk_Platform.Controllers
             return View(category);
         }
 
-        // GET: Categories/Delete/5
         public IActionResult Delete(int? id)
         {
             if (id == null) return NotFound();
@@ -96,7 +91,6 @@ namespace IT_Helpdesk_Platform.Controllers
             return View(category);
         }
 
-        // POST: Categories/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public IActionResult DeleteConfirmed(int id)

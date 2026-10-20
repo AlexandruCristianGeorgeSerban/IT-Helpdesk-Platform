@@ -1,5 +1,4 @@
 ﻿using IT_Helpdesk_Platform.Models;
-using Microsoft.EntityFrameworkCore;
 
 namespace IT_Helpdesk_Platform.Services.Interfaces
 {
@@ -12,5 +11,10 @@ namespace IT_Helpdesk_Platform.Services.Interfaces
         Task DeleteTicketAsync(int id);
         bool TicketExists(int id);
         Task<IEnumerable<Ticket>> GetFilteredTicketsAsync(int? requesterId, string? searchString, string? statusFilter, string? priorityFilter);
+        Task AddCommentAsync(Comment comment);
+        Task AddAttachmentAsync(Attachment attachment);
+        Task<List<string>> ProcessAttachmentsAsync(int ticketId, IEnumerable<IFormFile> files, int? commentId = null);
+        Task<IEnumerable<User>> GetSupportStaffAsync();
+        Task<IEnumerable<User>> GetAllUsersAsync();
     }
 }

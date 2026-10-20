@@ -1,10 +1,13 @@
 ﻿using IT_Helpdesk_Platform.Models;
 using IT_Helpdesk_Platform.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using System.Threading.Tasks;
 
 namespace IT_Helpdesk_Platform.Controllers
 {
+    [Authorize(Roles = "Admin")]
     public class UsersController : Controller
     {
         private readonly IUserService _userService;
@@ -16,99 +19,119 @@ namespace IT_Helpdesk_Platform.Controllers
             _departmentService = departmentService;
         }
 
-        // GET: Users
-        public IActionResult Index(string? searchString)
+        public async Task<IActionResult> Index(string? searchString)
         {
             ViewData["CurrentFilter"] = searchString;
-            var users = _userService.GetAllUsers(searchString);
+            var users = await _userService.GetFilteredUsersAsync(searchString);
             return View(users);
         }
 
-        // GET: Users/Details/5
-        public IActionResult Details(int? id)
+        public async Task<IActionResult> Details(int? id)
         {
             if (id == null) return NotFound();
-            var user = _userService.GetUserById(id.Value);
+            var user = await _userService.GetUserByIdWithDepartmentAsync(id.Value);
             return user == null ? NotFound() : View(user);
         }
 
-        // GET: Users/Create
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
             ViewData["DepartmentId"] = new SelectList(_departmentService.GetAllDepartments(), "Id", "Name");
+            ViewData["Roles"] = new SelectList(await _userService.GetAllRolesAsync());
             return View();
         }
 
-        // POST: Users/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Create([Bind("Id,FirstName,LastName,Email,PasswordHash,Role,DepartmentId,PhoneNumber,EmailNotificationsEnabled,PushNotificationsEnabled")] User user)
+        public async Task<IActionResult> Create([Bind("FirstName,LastName,Email,PhoneNumber,DepartmentId,Role")] User formUser, string? PasswordHash)
         {
-            ModelState.Remove("Department");
+            ModelState.Clear();
+            TryValidateModel(formUser);
+
             if (ModelState.IsValid)
             {
-                _userService.CreateUser(user);
-                return RedirectToAction(nameof(Index));
+                string finalPassword = string.IsNullOrEmpty(PasswordHash) ? "Helpdesk123!" : PasswordHash;
+
+                var result = await _userService.CreateUserWithRoleAsync(formUser, finalPassword, formUser.Role ?? "User");
+
+                if (result.Succeeded)
+                {
+                    TempData["SuccessMessage"] = "User created successfully.";
+                    return RedirectToAction(nameof(Index));
+                }
+                foreach (var error in result.Errors) ModelState.AddModelError(string.Empty, error.Description);
             }
-            ViewData["DepartmentId"] = new SelectList(_departmentService.GetAllDepartments(), "Id", "Name", user.DepartmentId);
-            return View(user);
+
+            ViewData["DepartmentId"] = new SelectList(_departmentService.GetAllDepartments(), "Id", "Name", formUser.DepartmentId);
+            ViewData["Roles"] = new SelectList(await _userService.GetAllRolesAsync(), formUser.Role);
+            return View(formUser);
         }
 
-        // GET: Users/Edit/5
-        public IActionResult Edit(int? id)
+        public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
-            var user = _userService.GetUserById(id.Value);
+            var user = await _userService.GetUserByIdWithDepartmentAsync(id.Value);
             if (user == null) return NotFound();
 
-            ViewData["DepartmentId"] = new SelectList(_departmentService.GetAllDepartments(), "Id", "Name", user.DepartmentId);
+            await PrepareEditViewBag(user);
             return View(user);
         }
 
-        // POST: Users/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Edit(int id, [Bind("Id,FirstName,LastName,Email,PasswordHash,Role,DepartmentId,PhoneNumber,EmailNotificationsEnabled,PushNotificationsEnabled")] User user)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,FirstName,LastName,Email,PhoneNumber,DepartmentId,Role")] User formUser, string? PasswordHash)
         {
-            if (id != user.Id) return NotFound();
+            if (id != formUser.Id) return NotFound();
 
-            ModelState.Remove("Department");
-            if (string.IsNullOrEmpty(user.PasswordHash)) ModelState.Remove("PasswordHash");
+            ModelState.Clear();
+            TryValidateModel(formUser);
 
             if (ModelState.IsValid)
             {
-                try
+                var result = await _userService.UpdateUserWithRoleAsync(formUser, formUser.Role ?? "User", PasswordHash);
+
+                if (result.Succeeded)
                 {
-                    _userService.UpdateUser(user, user.PasswordHash);
+                    TempData["SuccessMessage"] = "User updated successfully.";
+                    return RedirectToAction(nameof(Index));
                 }
-                catch
-                {
-                    if (!_userService.UserExists(user.Id)) return NotFound();
-                    else throw;
-                }
-                return RedirectToAction(nameof(Index));
+                foreach (var error in result.Errors) ModelState.AddModelError(string.Empty, error.Description);
             }
-            ViewData["DepartmentId"] = new SelectList(_departmentService.GetAllDepartments(), "Id", "Name", user.DepartmentId);
-            return View(user);
+
+            await PrepareEditViewBag(formUser);
+            return View(formUser);
         }
 
-        // GET: Users/Delete/5
-        public IActionResult Delete(int? id)
+        public async Task<IActionResult> Delete(int? id)
         {
             if (id == null) return NotFound();
-            var user = _userService.GetUserById(id.Value);
+            var user = await _userService.GetUserByIdWithDepartmentAsync(id.Value);
             return user == null ? NotFound() : View(user);
         }
 
-        // POST: Users/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        public IActionResult DeleteConfirmed(int id)
+        public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            _userService.DeleteUser(id);
+            try
+            {
+                var result = await _userService.DeleteUserAsync(id);
+                if (result.Succeeded)
+                    TempData["SuccessMessage"] = "User and all related data deleted successfully.";
+                else
+                    TempData["ErrorMessage"] = "Could not delete user.";
+            }
+            catch (System.Exception ex)
+            {
+                TempData["ErrorMessage"] = "Database constraint error: " + ex.InnerException?.Message ?? ex.Message;
+            }
+
             return RedirectToAction(nameof(Index));
+        }
+
+        private async Task PrepareEditViewBag(User user)
+        {
+            ViewData["DepartmentId"] = new SelectList(_departmentService.GetAllDepartments(), "Id", "Name", user.DepartmentId);
+            ViewData["Roles"] = new SelectList(await _userService.GetAllRolesAsync(), user.Role);
         }
     }
 }

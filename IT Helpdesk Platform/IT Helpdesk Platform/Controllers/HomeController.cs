@@ -1,8 +1,8 @@
 ﻿using IT_Helpdesk_Platform.Models;
 using IT_Helpdesk_Platform.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
-using System.Threading.Tasks;
 
 namespace IT_Helpdesk_Platform.Controllers
 {
@@ -20,6 +20,14 @@ namespace IT_Helpdesk_Platform.Controllers
         // 1. Dashboard for guests
         public IActionResult GuestDashboard()
         {
+            if (User.Identity != null && User.Identity.IsAuthenticated)
+            {
+                if (User.IsInRole("Admin")) return RedirectToAction("AdministratorDashboard");
+                if (User.IsInRole("Agent")) return RedirectToAction("AgentDashboard");
+
+                return RedirectToAction("UserDashboard");
+            }
+
             return View();
         }
 
@@ -30,6 +38,7 @@ namespace IT_Helpdesk_Platform.Controllers
         }
 
         // 3. Dashboard for IT agents
+        [Authorize(Roles = "Admin,Agent")]
         public async Task<IActionResult> AgentDashboard()
         {
             var ticketsList = await _ticketService.GetAllTicketsAsync();
@@ -37,6 +46,7 @@ namespace IT_Helpdesk_Platform.Controllers
         }
 
         // 4. Dashboard for administrators
+        [Authorize(Roles = "Admin")]
         public IActionResult AdministratorDashboard()
         {
             return View();
