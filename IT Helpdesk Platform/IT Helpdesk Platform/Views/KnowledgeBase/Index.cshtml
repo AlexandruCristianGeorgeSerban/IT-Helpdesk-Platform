@@ -1,0 +1,154 @@
+﻿@model IEnumerable<IT_Helpdesk_Platform.Models.KnowledgeArticle>
+
+@{
+    ViewData["Title"] = "Knowledge Base";
+    
+    var hardwareArticles = Model.Where(a => a.Category == "Hardware" || a.Category == "Gear").ToList();
+    var softwareArticles = Model.Where(a => a.Category == "Software" || a.Category == "Accounts").ToList();
+    var networkArticles = Model.Where(a => a.Category == "Network" || a.Category == "Security").ToList();
+
+    string? currentCategory = ViewData["CurrentCategory"]?.ToString();
+    string colClass = string.IsNullOrEmpty(currentCategory) ? "col-md-4" : "col-md-4 mx-auto";
+}
+
+<div class="container main-container">
+    
+    <div class="text-center mb-5 mt-3">
+        <h2 class="fw-bold mb-2">How can we help you today?</h2>
+        <p class="text-muted mb-4">Search our knowledge base for quick solutions to common issues.</p>
+        
+        <form asp-controller="KnowledgeBase" asp-action="Index" method="get" class="row justify-content-center">
+            <div class="col-md-8 col-lg-6">
+                <div class="input-group shadow-sm">
+
+                    <input type="text" name="searchString" value="@ViewData["CurrentSearch"]" class="form-control px-3" placeholder="E.g., How do I install the new VPN?">
+                    
+                    <button class="btn btn-primary px-4" type="submit">
+                        <i class="bi bi-search me-1"></i> Search
+                    </button>
+                    
+                    <a asp-action="Index" class="btn btn-outline-danger px-3 d-flex align-items-center" title="Clear Filters" style="border-left: none;">
+                        <i class="bi bi-x-circle me-1"></i> Clear
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-warning text-center">
+            <i class="bi bi-exclamation-triangle me-2"></i> No articles found. Try different keywords or clear the filters.
+        </div>
+    }
+
+    <div class="row g-4">
+        
+        @if (hardwareArticles.Any())
+        {
+            <div class="@colClass">
+                <div class="card h-100 border-0 shadow-sm content-card p-0">
+                    <div class="card-body p-4">
+                        
+                        <div class="mb-3 border-bottom pb-3">
+                            <h6 class="text-uppercase fw-bold mb-2" style="letter-spacing: 1px; font-size: 0.85rem;">
+                                <i class="bi bi-pc-display text-primary me-2"></i> Hardware & Gear
+                            </h6>
+                            @if (string.IsNullOrEmpty(currentCategory))
+                            {
+                                <a asp-action="Index" asp-route-category="Hardware" class="btn btn-sm btn-light border text-muted shadow-sm" style="font-size: 0.8rem;">
+                                    View all @hardwareArticles.Count articles <i class="bi bi-arrow-right ms-1"></i>
+                                </a>
+                            }
+                        </div>
+
+                        <ul class="list-unstyled mb-0" style="line-height: 2.2;">
+                            @foreach (var item in hardwareArticles)
+                            {
+                                <li><a href="#" data-bs-toggle="modal" data-bs-target="#modal-@item.Id" class="text-muted text-decoration-none hover-primary">@item.Title</a></li>
+                            }
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        }
+        
+        @if (softwareArticles.Any())
+        {
+            <div class="@colClass">
+                <div class="card h-100 border-0 shadow-sm content-card p-0">
+                    <div class="card-body p-4">
+                        
+                        <div class="mb-3 border-bottom pb-3">
+                            <h6 class="text-uppercase fw-bold mb-2" style="letter-spacing: 1px; font-size: 0.85rem;">
+                                <i class="bi bi-window-stack text-warning me-2"></i> Software & Accounts
+                            </h6>
+                            @if (string.IsNullOrEmpty(currentCategory))
+                            {
+                                <a asp-action="Index" asp-route-category="Software" class="btn btn-sm btn-light border text-muted shadow-sm" style="font-size: 0.8rem;">
+                                    View all @softwareArticles.Count articles <i class="bi bi-arrow-right ms-1"></i>
+                                </a>
+                            }
+                        </div>
+
+                        <ul class="list-unstyled mb-0" style="line-height: 2.2;">
+                            @foreach (var item in softwareArticles)
+                            {
+                                <li><a href="#" data-bs-toggle="modal" data-bs-target="#modal-@item.Id" class="text-muted text-decoration-none hover-primary">@item.Title</a></li>
+                            }
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        }
+
+        @if (networkArticles.Any())
+        {
+            <div class="@colClass">
+                <div class="card h-100 border-0 shadow-sm content-card p-0">
+                    <div class="card-body p-4">
+                        
+                        <div class="mb-3 border-bottom pb-3">
+                            <h6 class="text-uppercase fw-bold mb-2" style="letter-spacing: 1px; font-size: 0.85rem;">
+                                <i class="bi bi-shield-check text-success me-2"></i> Network & Security
+                            </h6>
+                            @if (string.IsNullOrEmpty(currentCategory))
+                            {
+                                <a asp-action="Index" asp-route-category="Network" class="btn btn-sm btn-light border text-muted shadow-sm" style="font-size: 0.8rem;">
+                                    View all @networkArticles.Count articles <i class="bi bi-arrow-right ms-1"></i>
+                                </a>
+                            }
+                        </div>
+
+                        <ul class="list-unstyled mb-0" style="line-height: 2.2;">
+                            @foreach (var item in networkArticles)
+                            {
+                                <li><a href="#" data-bs-toggle="modal" data-bs-target="#modal-@item.Id" class="text-muted text-decoration-none hover-primary">@item.Title</a></li>
+                            }
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        }
+
+    </div>
+</div>
+
+@foreach (var item in Model)
+{
+    <div class="modal fade" id="modal-@item.Id" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-light border-0">
+                    <h5 class="modal-title fw-bold @item.ColorClass"><i class="bi @item.IconClass me-2"></i>@item.Title</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4 text-muted">
+                    @Html.Raw(item.Content)
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<partial name="_BackToTop" />

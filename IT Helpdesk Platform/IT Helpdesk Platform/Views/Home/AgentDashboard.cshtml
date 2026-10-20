@@ -1,0 +1,134 @@
+﻿@model IEnumerable<IT_Helpdesk_Platform.Models.Ticket>
+
+@{
+    ViewData["Title"] = "Agent Dashboard";
+
+    Layout = "~/Views/Shared/_AgentLayout.cshtml";
+
+    var openCount = Model.Count(t => t.Status == "Open");
+    var inProgressCount = Model.Count(t => t.Status == "In Progress");
+    var resolvedCount = Model.Count(t => t.Status == "Resolved");
+    var slaBreachedCount = Model.Count(t => t.DueDate.HasValue && t.DueDate < DateTime.Now && t.Status != "Resolved" && t.Status != "Closed");
+}
+
+<div class="container main-container">
+    
+    <h2 class="mb-4"><i class="bi bi-speedometer2 me-2"></i>General Dashboard</h2>
+    
+    <div class="row mb-4">
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card stat-card h-100" onclick="window.location.href='@Url.Action("AllTickets", "Tickets")'" style="border-top: 4px solid #0d6efd !important;">
+                <div class="card-body text-center">
+                    <h5 class="card-title text-primary">Open Tickets</h5>
+                    <p class="display-4 text-primary">@openCount</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card stat-card h-100" onclick="window.location.href='@Url.Action("AllTickets", "Tickets")'" style="border-top: 4px solid #ffc107 !important;">
+                <div class="card-body text-center">
+                    <h5 class="card-title text-warning">In Progress</h5>
+                    <p class="display-4 text-warning">@inProgressCount</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card stat-card h-100" onclick="window.location.href='@Url.Action("AllTickets", "Tickets")'" style="border-top: 4px solid #198754 !important;">
+                <div class="card-body text-center">
+                    <h5 class="card-title text-success">Resolved (Today)</h5>
+                    <p class="display-4 text-success">@resolvedCount</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card stat-card h-100" onclick="window.location.href='@Url.Action("AllTickets", "Tickets")'" style="border-top: 4px solid #dc3545 !important;">
+                <div class="card-body text-center">
+                    <h5 class="card-title text-danger">Service Level Agreement Breached</h5>
+                    <p class="display-4 text-danger">@slaBreachedCount</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8 mb-3">
+            <div class="content-card h-100">
+                <h4><i class="bi bi-clock-history me-2"></i>Recent Activity</h4>
+                <p class="text-muted mb-4">A brief overview of the latest updated tickets.</p>
+                
+                @if (Model.Any())
+                {
+                    <ul class="list-group list-group-flush mb-4">
+                        @foreach (var ticket in Model.OrderByDescending(t => t.CreatedAt).Take(4))
+                        {
+                            <li class="list-group-item px-0 py-3">
+                                <div class="row align-items-center w-100 m-0">
+    
+                                    <div class="col-sm-6 ps-0 mb-2 mb-sm-0">
+                                        <h6 class="mb-1">
+                                            <a asp-controller="Tickets" asp-action="AllTickets" asp-route-id="@ticket.Id" class="text-decoration-none text-dark fw-bold">
+                                                #@ticket.Id - @ticket.Title
+                                            </a>
+                                        </h6>
+                                        <small class="text-muted">Requested by @(ticket.Requester != null ? ticket.Requester.FirstName : "Unknown") - @ticket.CreatedAt.ToString("MMM dd")</small>
+                                    </div>
+    
+                                    <div class="col-sm-3 text-sm-center px-0">
+                                        <small class="text-muted">
+                                            <i class="bi bi-calendar-event"></i> SLA:
+                                            @(ticket.DueDate.HasValue? ticket.DueDate.Value.ToString("dd MMM, HH:mm") : "N/A")
+                                        </small>
+
+                                        @if (ticket.DueDate.HasValue && ticket.Status != "Resolved" && ticket.Status != "Closed")
+                                        {
+                                            if (ticket.DueDate < DateTime.Now)
+                                            {
+                                                <br />
+                                                <span class="badge bg-danger shadow-sm mt-1">
+                                                    <i class="bi bi-exclamation-triangle-fill"></i> SLA Breached
+                                                </span>
+                                            }
+                                            else if (ticket.DueDate < DateTime.Now.AddHours(2))
+                                            {
+                                                <br />
+                                                <span class="badge bg-warning shadow-sm mt-1">
+                                                    <i class="bi bi-clock-history"></i> Approaching SLA
+                                                </span>
+                                            }
+                                        }
+                                    </div>
+
+                                    <div class="col-sm-3 text-sm-end pe-0 mt-2 mt-sm-0">
+                                        @{
+                                            var statusClass = ticket.Status switch
+                                            {
+                                                "Open" => "bg-primary",
+                                                "In Progress" => "bg-warning",
+                                                "Resolved" => "bg-success",
+                                                "Closed" => "bg-secondary",
+                                                _ => "bg-primary"
+                                            };
+                                        }
+                                        <span class="badge @statusClass">@ticket.Status</span>
+                                    </div>
+
+                                </div>
+                            </li>
+                        }
+                    </ul>
+                }
+
+                <a asp-controller="Tickets" asp-action="AllTickets" class="btn btn-outline-primary btn-sm">View all tickets &rarr;</a>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <div class="content-card h-100 bg-light">
+                <h4><i class="bi bi-bell me-2"></i>Notifications</h4>
+                <p class="text-muted small mt-3">No urgent notifications at this time.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<partial name="_BackToTop" />

@@ -29,6 +29,12 @@ namespace IT_Helpdesk_Platform.Models
         [StringLength(20)]
         public string? Role { get; set; } // e.g., "Employee", "IT Agent"
 
+        [StringLength(20)]
+        public string? PhoneNumber { get; set; }
+
+        public bool EmailNotificationsEnabled { get; set; } = false;
+        public bool PushNotificationsEnabled { get; set; } = false;
+
         public int DepartmentId { get; set; }
 
         [ForeignKey("DepartmentId")]

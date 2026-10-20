@@ -1,0 +1,53 @@
+﻿@model IT_Helpdesk_Platform.Models.KnowledgeArticle
+
+@{
+    ViewData["Title"] = "Delete Article";
+
+    Layout = "~/Views/Shared/_AdministratorLayout.cshtml";
+}
+
+<div class="container main-container mt-4">
+    <h2 class="mb-4 text-danger"><i class="bi bi-exclamation-triangle-fill me-2"></i>Delete Article #@Model.Id</h2>
+    
+    <div class="content-card shadow-sm p-4 bg-white rounded" style="max-width: 800px; border-top: 4px solid #dc3545;">
+        <h4 class="mb-3">Are you sure you want to delete this?</h4>
+        <p class="text-muted mb-4">This action cannot be undone. Once deleted, this article will be removed from the Knowledge Base permanently.</p>
+        
+        <div class="bg-light p-3 rounded mb-4 border">
+            <div class="row align-items-center mb-2">
+                <div class="col-sm-4 text-muted">Category</div>
+                <div class="col-sm-8">
+                    @{
+                        string badgeClass = Model.Category switch
+                        {
+                            "Hardware" => "bg-primary",
+                            "Gear" => "bg-info",
+                            "Software" => "bg-warning",
+                            "Accounts" => "bg-purple",
+                            "Network" => "bg-success",
+                            "Security" => "bg-danger",
+                            _ => "bg-secondary"
+                        };
+                    }
+                    <span class="badge @badgeClass">@Model.Category</span>
+                </div>
+            </div>
+            <div class="row align-items-center">
+                <div class="col-sm-4 text-muted">Article Title</div>
+                <div class="col-sm-8 fw-bold fs-5 text-dark">@Model.Title</div>
+            </div>
+        </div>
+        
+        <form asp-action="Delete">
+            <input type="hidden" asp-for="Id" />
+            <div class="d-flex justify-content-between border-top pt-3">
+                <a asp-action="Index" class="btn btn-light border shadow-sm">
+                    <i class="bi bi-arrow-left me-1"></i> Cancel
+                </a>
+                <button type="submit" class="btn btn-danger shadow-sm">
+                    <i class="bi bi-trash me-1"></i> Yes, Delete Article
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

@@ -1,0 +1,252 @@
+﻿@model IT_Helpdesk_Platform.Models.LoginViewModel
+
+@{
+    ViewData["Title"] = "Login";
+    Layout = "_AuthentificationLayout";
+}
+
+<div class="login-container flex-grow-1 d-flex align-items-center justify-content-center">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-6 col-lg-4">
+                
+                <div class="content-card text-center p-4 shadow-sm bg-white rounded">
+                    
+                    <div class="mb-4">
+                        <h2 class="text-primary fw-bold">
+                            <i class="bi bi-headset"></i> IT Helpdesk
+                        </h2>
+                        <p class="text-muted">Sign in to your account</p>
+                    </div>
+
+                    <form asp-controller="Account" asp-action="Login" method="post" class="text-start">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                        <div class="mb-3">
+                            <label asp-for="Email" class="form-label text-muted small text-uppercase fw-bold">Email Address</label>
+                            <div class="input-group shadow-sm">
+                                <span class="input-group-text bg-white border-end-0"><i class="bi bi-envelope text-muted"></i></span>
+                                <input asp-for="Email" class="form-control border-start-0" placeholder="name@company.com" />
+                            </div>
+                            <span asp-validation-for="Email" class="text-danger small mt-1 d-block"></span>
+                        </div>
+                        
+                        <div class="mb-2">
+                            <label asp-for="Password" class="form-label text-muted small text-uppercase fw-bold">Password</label>
+                            <div class="input-group shadow-sm">
+                                <span class="input-group-text bg-white border-end-0"><i class="bi bi-lock text-muted"></i></span>
+                                <input asp-for="Password" class="form-control border-start-0 border-end-0" placeholder="••••••••" id="password" />
+                                <span class="input-group-text bg-white border-start-0 password-toggle-icon" onclick="togglePassword('password', 'eyeIconLogin')" style="cursor:pointer;">
+                                    <i class="bi bi-eye text-muted" id="eyeIconLogin"></i>
+                                </span>
+                            </div>
+                            <span asp-validation-for="Password" class="text-danger small mt-1 d-block"></span>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <div class="form-check mb-0 text-start">
+                                <input asp-for="RememberMe" class="form-check-input" />
+                                <label asp-for="RememberMe" class="form-check-label small text-muted">
+                                    Remember me
+                                </label>
+                            </div>
+                            <a href="#" class="small text-decoration-none" data-bs-toggle="modal" data-bs-target="#forgotPasswordModal">Forgot Password?</a>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 py-2 mb-3 shadow-sm">
+                            <i class="bi bi-box-arrow-in-right me-2"></i> Sign In
+                        </button>
+                    </form>
+
+                    <div class="border-top pt-3 mt-3">
+                        <p class="text-muted small mb-0">
+                            Don't have an account?
+                            <a href="#" class="text-decoration-none fw-bold" data-bs-toggle="modal" data-bs-target="#registerModal">Create one now</a>
+                        </p>
+                    </div>
+
+                </div>
+                
+                <div class="text-center mt-4">
+                    <p class="text-muted small">&copy; 2026 Internal IT Support. All rights reserved.</p>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="registerModal" data-bs-backdrop="static" tabindex="-1" aria-labelledby="registerModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-light">
+                <h5 class="modal-title fw-bold" id="registerModalLabel"><i class="bi bi-person-plus me-2"></i>Create New Account</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                
+                <form id="registerForm">
+                    <div id="registerError" class="alert alert-danger d-none small"></div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small fw-bold">First Name</label>
+                            <input type="text" name="FirstName" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small fw-bold">Last Name</label>
+                            <input type="text" name="LastName" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted small fw-bold">Department</label>
+                        <select name="DepartmentId" class="form-select" asp-items="ViewBag.Departments" required>
+                            <option selected disabled value="">Choose Department...</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted small fw-bold">Email</label>
+                        <input type="email" name="Email" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted small fw-bold">Choose Password</label>
+                        <div class="input-group">
+                            <input type="password" name="Password" class="form-control border-end-0" id="regPassword" required>
+                            <span class="input-group-text bg-white border-start-0 password-toggle-icon" onclick="togglePassword('regPassword', 'eyeIconReg1')" style="cursor:pointer;">
+                                <i class="bi bi-eye text-muted" id="eyeIconReg1"></i>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label text-muted small fw-bold">Confirm Password</label>
+                        <div class="input-group">
+                            <input type="password" name="ConfirmPassword" class="form-control border-end-0" id="regConfirmPassword" required>
+                            <span class="input-group-text bg-white border-start-0 password-toggle-icon" onclick="togglePassword('regConfirmPassword', 'eyeIconReg2')" style="cursor:pointer;">
+                                <i class="bi bi-eye text-muted" id="eyeIconReg2"></i>
+                            </span>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100" id="btnRegister">Register & Login</button>
+                </form>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="forgotPasswordModal" data-bs-backdrop="static" tabindex="-1" aria-labelledby="forgotPasswordModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-light">
+                <h5 class="modal-title fw-bold" id="forgotPasswordModalLabel"><i class="bi bi-key me-2"></i>Reset Password</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <p class="text-muted small mb-4">Enter your email address below and we'll send you a secure link to reset your password.</p>
+                
+                <form id="forgotPasswordForm">
+                    <div id="forgotSuccess" class="alert alert-success d-none small"></div>
+                    <div id="forgotError" class="alert alert-danger d-none small"></div>
+
+                    <div class="mb-4">
+                        <label class="form-label text-muted small fw-bold text-uppercase">Email Address</label>
+                        <div class="input-group shadow-sm">
+                            <span class="input-group-text bg-white border-end-0"><i class="bi bi-envelope text-muted"></i></span>
+                            <input type="email" name="Email" class="form-control border-start-0" placeholder="name@company.com" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 shadow-sm" id="btnForgot">
+                        <i class="bi bi-send me-1"></i> Send Reset Link
+                    </button>
+                </form>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        $(document).ready(function () {
+            
+        // --- AJAX FOR REGISTER ---
+        $('#registerForm').on('submit', function (e) {
+            e.preventDefault();
+
+            var password = $('#regPassword').val();
+            var confirmPassword = $('#regConfirmPassword').val();
+            var $errorDiv = $('#registerError');
+
+            $errorDiv.addClass('d-none').removeClass('alert-success').addClass('alert-danger');
+
+            if (password !== confirmPassword) {
+                $errorDiv.removeClass('d-none').text('Passwords do not match! Please try again.');
+                return false;
+            }
+
+            var $btn = $('#btnRegister');
+            var formData = $(this).serialize();
+
+            $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Processing...');
+
+            $.ajax({
+                type: 'POST',
+                url: '/Account/RegisterAjax',
+                data: formData,
+                success: function (response) {
+                    if (response.success) {
+                        $errorDiv.removeClass('alert-danger d-none').addClass('alert-success')
+                                 .text('Account created successfully! Redirecting to Dashboard...');
+    
+                        $btn.html('<i class="bi bi-check-circle"></i> Success!');
+                                    
+                        setTimeout(function () {
+                            window.location.href = response.redirectUrl;
+                        }, 2000);
+
+                    } else {
+                        $errorDiv.removeClass('d-none').text(response.message);
+                        $btn.prop('disabled', false).text('Register & Login');
+                    }
+                },
+                error: function () {
+                    $errorDiv.removeClass('d-none').text('Server error. Could not connect to the database.');
+                    $btn.prop('disabled', false).text('Register & Login');
+                }
+            });
+        });
+
+            // --- AJAX FOR FORGOT PASSWORD ---
+            $('#forgotPasswordForm').on('submit', function (e) {
+                e.preventDefault();
+                var $btn = $('#btnForgot');
+                var formData = $(this).serialize();
+
+                $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Sending...');
+                $('#forgotSuccess, #forgotError').addClass('d-none');
+
+                $.ajax({
+                    type: 'POST',
+                    url: '/Account/ForgotPasswordAjax',
+                    data: formData,
+                    success: function (response) {
+                        if (response.success) {
+                            $('#forgotSuccess').removeClass('d-none').text('Reset link sent to your email!');
+                            $btn.prop('disabled', false).html('<i class="bi bi-send me-1"></i> Send Reset Link');
+                            $('#forgotPasswordForm')[0].reset();
+                        } else {
+                            $('#forgotError').removeClass('d-none').text(response.message);
+                            $btn.prop('disabled', false).html('<i class="bi bi-send me-1"></i> Send Reset Link');
+                        }
+                    }
+                });
+            });
+            
+        });
+    </script>
+}

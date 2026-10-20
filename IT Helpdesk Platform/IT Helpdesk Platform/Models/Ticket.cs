@@ -27,6 +27,8 @@ namespace IT_Helpdesk_Platform.Models
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
+        public DateTime? DueDate { get; set; }
+
         public int CategoryId { get; set; }
         [ForeignKey("CategoryId")]
         public Category? Category { get; set; }

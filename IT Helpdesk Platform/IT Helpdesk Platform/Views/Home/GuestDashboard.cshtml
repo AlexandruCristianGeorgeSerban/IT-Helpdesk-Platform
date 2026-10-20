@@ -1,0 +1,40 @@
+﻿@{
+    ViewData["Title"] = "Welcome";
+
+    Layout = "~/Views/Shared/_GuestLayout.cshtml";
+}
+
+<div class="container main-container mt-5">
+    
+    <div class="text-center mb-5 pb-4">
+        <h1 class="display-4 fw-bold text-dark mb-3"><i class="bi bi-headset text-secondary me-3"></i>Welcome to IT Helpdesk</h1>
+        <p class="lead text-muted mx-auto" style="max-width: 650px;">
+            Your one-stop solution for all technical support needs. Please sign in to submit a ticket, or browse our public guides to fix common issues yourself.
+        </p>
+    </div>
+
+    <div class="row g-4 justify-content-center mb-5">
+        
+        <div class="col-md-5">
+            <a asp-controller="KnowledgeBase" asp-action="Index" class="text-decoration-none">
+                <div class="stat-card card h-100 text-center p-5 border-0 bg-white shadow-sm" style="border-top: 4px solid #6c757d !important;">
+                    <i class="bi bi-search display-3 text-secondary mb-3"></i>
+                    <h4 class="card-title fw-bold text-dark mb-2">Search the Knowledge Base</h4>
+                    <p class="text-muted mb-0">No account required. Find step-by-step guides, FAQs, and troubleshooting steps for common problems.</p>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-md-5">
+            <a asp-controller="Account" asp-action="Login" class="text-decoration-none">
+                <div class="stat-card card h-100 text-center p-5 border-0 bg-white shadow-sm" style="border-top: 4px solid #0d6efd !important;">
+                    <i class="bi bi-box-arrow-in-right display-3 text-primary mb-3"></i>
+                    <h4 class="card-title fw-bold text-dark mb-2">Sign In to Submit Tickets</h4>
+                    <p class="text-muted mb-0">Employees must be logged in to request new hardware, report severe issues, or check ticket statuses.</p>
+                </div>
+            </a>
+        </div>
+
+    </div>
+
+</div>

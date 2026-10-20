@@ -2,6 +2,8 @@
 
 @{
     ViewData["Title"] = "Create Ticket";
+
+    Layout = "~/Views/Shared/_AdministratorLayout.cshtml";
 }
 
 <div class="container main-container mt-4">
@@ -72,3 +74,9 @@
         </form>
     </div>
 </div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

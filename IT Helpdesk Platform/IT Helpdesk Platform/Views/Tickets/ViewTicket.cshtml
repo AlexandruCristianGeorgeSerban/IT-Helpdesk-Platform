@@ -1,0 +1,181 @@
+﻿@model IT_Helpdesk_Platform.Models.Ticket
+
+@{
+    ViewData["Title"] = "Ticket Details";
+
+    bool isResolvedOrClosed = Model.Status == "Resolved" || Model.Status == "Closed";
+
+    var statusClass = Model.Status switch
+    {
+        "Open" => "bg-primary",
+        "In Progress" => "bg-warning",
+        "Resolved" => "bg-success",
+        "Closed" => "bg-secondary",
+        _ => "bg-primary"
+    };
+
+    var priorityTextClass = Model.Priority switch
+    {
+        "Low" => "bg-secondary",
+        "Medium" => "bg-info",
+        "High" => "bg-danger",
+        "Critical" => "bg-critical",
+        _ => "bg-secondary"
+    };
+
+    var titleClass = isResolvedOrClosed ? "text-decoration-line-through text-muted" : "";
+    var chatCardClass = isResolvedOrClosed ? "opacity-75" : "";
+
+    bool isITStaff = User.IsInRole("Admin") || // for Milestone 4
+                     User.IsInRole("Agent") || // for Milestone 4
+                     Context.Request.Query["role"] == "Admin" || // [url]?role=Admin for testing
+                     Context.Request.Query["role"] == "Agent";   // [url]?role=Agent for testing
+}
+
+<div class="container main-container">
+    <div class="mb-3">
+        <a asp-action="MyTickets" class="text-decoration-none text-secondary">
+            <i class="bi bi-arrow-left"></i> Back to tickets
+        </a>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-8 mb-4">
+            <div class="content-card mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h3 class="mb-0 @titleClass">#@Model.Id - @Model.Title</h3>
+                    <span class="badge @statusClass fs-6">@Model.Status</span>
+                </div>
+                <hr>
+                <p class="fw-bold text-secondary mb-1">Description:</p>
+                <p style="white-space: pre-wrap;">@Model.Description</p>
+            </div>
+
+            <div class="content-card @chatCardClass">
+                <h5 class="mb-4"><i class="bi bi-chat-left-text me-2"></i>Discussion Thread</h5>
+                
+                <div class="d-flex mb-4">
+                    <div class="flex-shrink-0">
+                        <div class="bg-secondary text-muted rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 45px; height: 45px;">
+                            <i class="bi bi-robot"></i>
+                        </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <div class="chat-bubble bg-light border-secondary">
+                            <strong>System Notification</strong> <span class="text-muted small ms-2">@Model.CreatedAt.ToString("MMM dd, yyyy, HH:mm")</span>
+                            <p class="mb-0 mt-2">This ticket has been registered successfully. An IT agent will review it shortly.</p>
+                        </div>
+                    </div>
+                </div>
+
+                @if (isResolvedOrClosed)
+                {
+                    <div class="mt-4 pt-3 border-top text-center">
+                        <p class="text-muted mb-0"><i class="bi bi-lock-fill"></i> This ticket is resolved and locked for new replies.</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="mt-4 pt-3 border-top">
+                        <form>
+                            <div class="mb-3">
+                                <textarea class="form-control bg-light" id="reply" rows="3" placeholder="Type your reply here..."></textarea>
+                            </div>
+                            
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <input type="file" id="chatAttachment" class="d-none" multiple>
+                                    <label for="chatAttachment" class="btn btn-light border text-secondary btn-sm">
+                                        <i class="bi bi-paperclip"></i> Attach File
+                                    </label>
+                                </div>
+                                
+                                <button type="button" class="btn btn-primary">
+                                    <i class="bi bi-reply-fill"></i> Send Reply
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            
+            <div class="content-card bg-light border-0 mb-4">
+                <h5 class="mb-3">Ticket Information</h5>
+                <ul class="list-unstyled mb-0">
+                    <li class="mb-2">
+                        <span class="text-muted">Requester:</span>
+                        <strong>@(Model.Requester != null ? $"{Model.Requester.FirstName} {Model.Requester.LastName}" : "Unknown")</strong>
+                    </li>
+                    <li class="mb-2">
+                        <span class="text-muted">Department:</span>
+                        <strong>@(Model.Requester?.Department != null ? Model.Requester.Department.Name : "N/A")</strong>
+                    </li>
+                    <li class="mb-2">
+                        <span class="text-muted">Created:</span>
+                        <strong>@Model.CreatedAt.ToString("MMM dd, yyyy")</strong>
+                    </li>
+                    <li class="mb-2">
+                        <span class="text-muted">Priority:</span>
+                        <span class="badge @priorityTextClass">@Model.Priority</span>
+                    </li>
+                    <li class="mb-2">
+                        <span class="text-muted">Category:</span>
+                        <strong>@(Model.Category != null ? Model.Category.Name : "N/A")</strong>
+                    </li>
+                    <li class="mb-0">
+                        <span class="text-muted">Assigned to:</span>
+                        <strong>@(Model.AssignedAgent != null ? $"{Model.AssignedAgent.FirstName} {Model.AssignedAgent.LastName}" : "Unassigned")</strong>
+                    </li>
+                </ul>
+            </div>
+
+            @if (isITStaff)
+            {
+                <div class="content-card border-success border border-2 shadow-sm bg-white">
+                    <h6 class="mb-3 fw-bold text-success-emphasis">
+                        <i class="bi bi-gear-fill me-2"></i>Agent Actions
+                    </h6>
+                    
+                    <form asp-action="UpdateTicketStatus" method="post">
+                        <input type="hidden" name="TicketId" value="@Model.Id" />
+                        
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-muted">Change Status</label>
+                            <select name="Status" class="form-select form-select-sm" asp-for="Status">
+                                <option value="Open">Open</option>
+                                <option value="In Progress">In Progress</option>
+                                <option value="Resolved">Resolved</option>
+                                <option value="Closed">Closed</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-muted">Change Priority</label>
+                            <select name="Priority" class="form-select form-select-sm" asp-for="Priority">
+                                <option value="Low">Low</option>
+                                <option value="Medium">Medium</option>
+                                <option value="High">High</option>
+                                <option value="Critical">Critical</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="form-label small fw-bold text-muted">Assign To</label>
+                            <select name="AssignedAgentId" class="form-select form-select-sm" asp-for="AssignedAgentId" asp-items="ViewBag.Agents">
+                                <option value="">-- Unassigned --</option>
+                            </select>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-success btn-sm w-100 fw-bold shadow-sm">
+                            <i class="bi bi-save me-1"></i> Update Ticket
+                        </button>
+                    </form>
+                </div>
+            }
+
+        </div>
+    </div>
+</div>

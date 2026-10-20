@@ -1,0 +1,58 @@
+﻿@{
+    ViewData["Title"] = "Support Portal";
+}
+
+<div class="container main-container mt-4">
+    
+    <div class="text-center mb-5 pb-4 border-bottom">
+        <h1 class="display-5 fw-bold text-primary mb-3"><i class="bi bi-person-workspace me-2"></i>IT Support Portal</h1>
+        <p class="lead text-muted">How can we help you today? Choose an option below to get started.</p>
+    </div>
+
+    <div class="row g-4 justify-content-center mb-5">
+        
+        <div class="col-md-4">
+            <a asp-controller="Tickets" asp-action="SubmitTicket" class="text-decoration-none">
+                <div class="stat-card card h-100 text-center p-5 border-0 bg-white shadow-sm" style="border-top: 4px solid #0d6efd !important;">
+                    <i class="bi bi-plus-circle-dotted display-3 text-primary mb-3"></i>
+                    <h4 class="card-title fw-bold text-dark mb-2">New Ticket</h4>
+                    <p class="text-muted mb-0">Report an IT issue or request new hardware/software.</p>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-md-4">
+            <a asp-controller="KnowledgeBase" asp-action="Index" class="text-decoration-none">
+                <div class="stat-card card h-100 text-center p-5 border-0 bg-white shadow-sm" style="border-top: 4px solid #ffc107 !important;">
+                    <i class="bi bi-lightbulb display-3 text-warning mb-3"></i>
+                    <h4 class="card-title fw-bold text-dark mb-2">Knowledge Base</h4>
+                    <p class="text-muted mb-0">Browse guides and fix common problems yourself.</p>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-md-4">
+            <a asp-controller="Tickets" asp-action="MyTickets" class="text-decoration-none">
+                <div class="stat-card card h-100 text-center p-5 border-0 bg-white shadow-sm" style="border-top: 4px solid #198754 !important;">
+                    <i class="bi bi-ticket-detailed display-3 text-success mb-3"></i>
+                    <h4 class="card-title fw-bold text-dark mb-2">My Tickets</h4>
+                    <p class="text-muted mb-0">Check the status of your current and past requests.</p>
+                </div>
+            </a>
+        </div>
+
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="alert alert-info shadow-sm d-flex align-items-center p-4 border-0" role="alert">
+                <i class="bi bi-info-circle-fill fs-2 text-info me-4"></i>
+                <div>
+                    <h5 class="alert-heading fw-bold mb-1">Need urgent assistance?</h5>
+                    <p class="mb-0 text-dark">If your issue is critical (e.g., completely locked out, stolen device), please submit a ticket first, then call the IT Hotline directly at <strong>Ext. 4001</strong>.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>

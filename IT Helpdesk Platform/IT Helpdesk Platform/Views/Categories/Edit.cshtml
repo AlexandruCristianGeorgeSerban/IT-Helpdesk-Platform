@@ -2,10 +2,12 @@
 
 @{
     ViewData["Title"] = "Edit Category";
+
+    Layout = "~/Views/Shared/_AdministratorLayout.cshtml";
 }
 
 <div class="container main-container mt-4">
-    <h2 class="mb-4"><i class="bi bi-pencil-square me-2"></i>Edit Category</h2>
+    <h2 class="mb-4"><i class="bi bi-pencil-square me-2"></i>Edit Category #@Model.Id</h2>
     
     <div class="row">
         <div class="col-md-6">

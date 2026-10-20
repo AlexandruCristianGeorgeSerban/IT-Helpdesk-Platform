@@ -2,10 +2,12 @@
 
 @{
     ViewData["Title"] = "User Details";
+
+    Layout = "~/Views/Shared/_AdministratorLayout.cshtml";
 }
 
 <div class="container main-container mt-4">
-    <h2 class="mb-4"><i class="bi bi-person-vcard me-2"></i>User Details</h2>
+    <h2 class="mb-4"><i class="bi bi-person-vcard me-2"></i>User #@Model.Id</h2>
     
     <div class="content-card shadow-sm p-4 bg-white rounded" style="max-width: 800px;">
         <div class="row mb-4">

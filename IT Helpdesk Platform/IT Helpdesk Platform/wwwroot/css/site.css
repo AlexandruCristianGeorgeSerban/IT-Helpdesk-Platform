@@ -1,39 +1,15 @@
 /* IT Helpdesk Platform */
 
+/* --- Base Elements & Layout --- */
 html {
     font-size: 14px;
+    overflow-y: scroll;
 }
 
 @media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
-}
-
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-    box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
-}
-
-html {
-    position: relative;
-    min-height: 100%;
-}
-
-body {
-    margin-bottom: 60px;
-}
-
-.form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
-    color: var(--bs-secondary-color);
-    text-align: end;
-}
-
-.form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
-    text-align: start;
-}
-
-html {
-    overflow-y: scroll;
+    html {
+        font-size: 16px;
+    }
 }
 
 body {
@@ -41,16 +17,95 @@ body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-.navbar-brand {
-    font-weight: bold;
-    color: #0d6efd !important;
-}
+    /* Prevents layout shift when a modal opens */
+    body.modal-open {
+        padding-right: 0 !important;
+    }
 
 .main-container {
     padding-top: 40px;
     padding-bottom: 60px;
 }
 
+/* --- Forms & Inputs --- */
+.btn:focus,
+.btn:active:focus,
+.btn-link.nav-link:focus,
+.form-control:focus,
+.form-check-input:focus {
+    box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+}
+
+.form-floating > .form-control-plaintext::placeholder,
+.form-floating > .form-control::placeholder {
+    color: var(--bs-secondary-color);
+    text-align: end;
+}
+
+.form-floating > .form-control-plaintext:focus::placeholder,
+.form-floating > .form-control:focus::placeholder {
+    text-align: start;
+}
+
+/* General adjustments for shadow and rounded corners */
+.toast {
+    border-radius: 8px !important;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+    border: none !important;
+}
+
+/* Authentication Show Password Icon */
+.password-toggle-icon {
+    cursor: pointer;
+}
+
+    .password-toggle-icon:hover {
+        color: #0d6efd !important;
+    }
+
+/* --- Navigation Bar --- */
+.navbar-brand {
+    font-weight: bold;
+    color: #0d6efd !important;
+}
+
+/* Inactive pages color */
+.custom-nav-link {
+    color: #9b9d9e !important;
+    transition: color 0.25s ease-in-out;
+    text-decoration: none;
+}
+
+    /* Hover effect */
+    .custom-nav-link:hover {
+        color: #c7c8c9 !important;
+    }
+
+    /* Active page highlight */
+    .custom-nav-link.active-page {
+        color: #ffffff !important;
+        font-weight: 600;
+    }
+
+/* Guest Active Page Navigation */
+.active-page-guest {
+    color: #6c757d !important;
+    border-bottom: 2px solid #6c757d !important;
+}
+
+/* Custom Slim Dropdown for the account menu */
+.slim-dropdown {
+    min-width: 140px !important;
+    padding-top: 0.3rem !important;
+    padding-bottom: 0.3rem !important;
+}
+
+    .slim-dropdown .dropdown-item {
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+    }
+
+/* --- Components & Cards --- */
 /* Dashboard Stat Cards */
 .stat-card {
     border-radius: 10px;
@@ -60,20 +115,20 @@ body {
     cursor: pointer;
 }
 
-.stat-card:hover {
-    transform: translateY(-5px);
-}
+    .stat-card:hover {
+        transform: translateY(-5px);
+    }
 
-.stat-card .card-title {
-    font-size: 0.85rem;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    color: #6c757d;
-}
+    .stat-card .card-title {
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: #6c757d;
+    }
 
-.stat-card .display-4 {
-    font-weight: 600;
-}
+    .stat-card .display-4 {
+        font-weight: 600;
+    }
 
 /* General Content Cards */
 .content-card {
@@ -92,31 +147,233 @@ body {
     border-left: 4px solid #0d6efd;
 }
 
-/* Authentification Show Password */
-.password-toggle-icon {
-    cursor: pointer;
+/* Light Mode button adjustments */
+.btn-light {
+    background-color: #f8f9fa !important;
+    border: 1px solid #ced4da !important;
+    color: #212529 !important;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }
 
-.password-toggle-icon:hover {
-    color: #0d6efd !important;
+    .btn-light:hover {
+        background-color: #e2e6ea !important;
+        border-color: #adb5bd !important;
+    }
+
+/* --- Back to Top Button --- */
+#btnBackToTop {
+    position: fixed;
+    bottom: 33px;
+    right: 30px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1050;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out, transform 0.2s;
 }
 
-/* --- Custom Navbar Styling --- */
+    #btnBackToTop.show {
+        display: flex;
+        opacity: 1;
+    }
 
-/* 1. Color for inactive pages */
-.custom-nav-link {
-    color: #9b9d9e !important;
-    transition: color 0.25s ease-in-out;
-    text-decoration: none;
+    #btnBackToTop:hover {
+        transform: translateY(-5px);
+    }
+
+/* --- Custom Colors & Badges --- */
+.bg-purple {
+    background-color: #6f42c1 !important;
+    color: white !important;
 }
 
-/* 2. Hover color */
-.custom-nav-link:hover {
-    color: #c7c8c9 !important;
+/* Personalized color for Critical priority */
+.text-critical {
+    color: #d63384 !important;
 }
 
-/* 3. Color for the active page */
-.custom-nav-link.active-page {
-    color: #ffffff !important;
-    font-weight: 600;
+.bg-critical {
+    background-color: #d63384 !important;
+    color: white !important;
 }
+
+/* DARK MODE STYLES */
+
+/* --- Global Layout & Backgrounds --- */
+/* Force full-height containers and main backgrounds to be dark */
+[data-bs-theme="dark"] body,
+[data-bs-theme="dark"] main,
+[data-bs-theme="dark"] .bg-light,
+[data-bs-theme="dark"] section.py-5,
+[data-bs-theme="dark"] .vh-100 {
+    background-color: #212529 !important;
+    color: #f8f9fa !important;
+}
+
+/* Navbar - Slightly darker to separate from the page background */
+[data-bs-theme="dark"] .navbar.bg-dark {
+    background-color: #15171a !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+/* --- Typography & Colors --- */
+/* Forced "dark" text becomes white */
+[data-bs-theme="dark"] .text-dark {
+    color: #f8f9fa !important;
+}
+
+/* Custom color adjustment for critical priority on dark backgrounds */
+[data-bs-theme="dark"] .text-critical {
+    color: #f78fb3 !important;
+}
+
+/* Ensure footer text and muted text remain visible */
+[data-bs-theme="dark"] .text-muted,
+[data-bs-theme="dark"] footer,
+[data-bs-theme="dark"] footer span,
+[data-bs-theme="dark"] p.small,
+[data-bs-theme="dark"] .small {
+    color: #adb5bd !important;
+}
+
+/* --- Components & Cards --- */
+/* General panels, stat cards, and content cards */
+[data-bs-theme="dark"] .bg-white,
+[data-bs-theme="dark"] .content-card,
+[data-bs-theme="dark"] .stat-card,
+[data-bs-theme="dark"] .card.shadow-sm {
+    background-color: #2b3035 !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    color: #f8f9fa !important;
+}
+
+/* Ticket Chat Bubble */
+[data-bs-theme="dark"] .chat-bubble {
+    background-color: #2b3035;
+    border-left: 4px solid #0a58ca;
+}
+
+/* Shadows adapted for dark backgrounds */
+[data-bs-theme="dark"] .shadow,
+[data-bs-theme="dark"] .shadow-sm {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* Urgent Assistance Alert styling */
+[data-bs-theme="dark"] .alert {
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    background-color: #1e2a35 !important; /* Subtle blue/dark-grey tint */
+    color: #e9ecef !important;
+}
+
+/* Success alert*/
+[data-bs-theme="dark"] .alert-success {
+    background-color: rgba(25, 135, 84, 0.15) !important;
+    color: #75b798 !important;
+    border: 1px solid rgba(25, 135, 84, 0.4) !important;
+}
+
+    [data-bs-theme="dark"] .alert-success .btn-close {
+        filter: invert(1) grayscale(100%) brightness(200%) !important;
+    }
+
+/* Buttons */
+[data-bs-theme="dark"] .btn-light {
+    background-color: #343a40 !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    color: #f8f9fa !important;
+}
+
+    [data-bs-theme="dark"] .btn-light:hover {
+        background-color: #495057 !important;
+        color: #ffffff !important;
+    }
+
+/* --- Forms, Modals & Tables --- */
+/* Inputs and Select fields */
+[data-bs-theme="dark"] .form-control,
+[data-bs-theme="dark"] .form-select {
+    background-color: #1b1e21 !important;
+    border-color: #495057 !important;
+    color: #f8f9fa !important;
+}
+
+    [data-bs-theme="dark"] .form-control:focus {
+        background-color: #1b1e21 !important;
+        border-color: #0d6efd !important;
+    }
+
+    /* Disabled or readonly inputs (e.g., Email address on profile) */
+    [data-bs-theme="dark"] .form-control:disabled,
+    [data-bs-theme="dark"] .form-control[readonly] {
+        background-color: #1b1e21 !important;
+        border-color: rgba(255, 255, 255, 0.1) !important;
+        color: #adb5bd !important;
+    }
+
+/* Specific styles for the global success notification */
+[data-bs-theme="dark"] .toast {
+    background-color: #2b3035 !important; /* Matches content cards background */
+    border: 1px solid rgba(25, 135, 84, 0.4) !important; /* Subtle green border */
+    color: #f8f9fa !important;
+}
+
+/* Toast Header in Dark Mode */
+[data-bs-theme="dark"] .toast-header {
+    background-color: rgba(25, 135, 84, 0.15) !important; /* Transparent green */
+    color: #75b798 !important; /* Light green text */
+    border-bottom: 1px solid rgba(25, 135, 84, 0.2) !important;
+}
+
+/* Close button (X) inverted to white for visibility in dark mode */
+[data-bs-theme="dark"] .toast .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%) !important;
+}
+
+/* If you are using a solid Bootstrap background (e.g., text-bg-success), override the blinding green */
+[data-bs-theme="dark"] .toast.text-bg-success,
+[data-bs-theme="dark"] .toast.bg-success {
+    background-color: rgba(25, 135, 84, 0.2) !important;
+    color: #75b798 !important;
+}
+
+/* Modals (Login, Register, Reset Password) */
+[data-bs-theme="dark"] .modal-content,
+[data-bs-theme="dark"] .modal-header,
+[data-bs-theme="dark"] .modal-footer {
+    background-color: #2b3035 !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+    [data-bs-theme="dark"] .modal-header h4,
+    [data-bs-theme="dark"] .modal-header h5,
+    [data-bs-theme="dark"] .modal-header .text-dark,
+    [data-bs-theme="dark"] .modal-header .text-muted {
+        color: #f8f9fa !important;
+    }
+
+/* Tables & Dashboard Lists */
+[data-bs-theme="dark"] .table thead tr,
+[data-bs-theme="dark"] .table thead th,
+[data-bs-theme="dark"] thead.bg-white,
+[data-bs-theme="dark"] thead.bg-light {
+    background-color: #343a40 !important;
+    color: #f8f9fa !important;
+    border-bottom: 2px solid #495057 !important;
+}
+
+/* Standardize ticket rows in the Dashboard */
+[data-bs-theme="dark"] .list-group-item {
+    background-color: #2b3035 !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    color: #f8f9fa !important;
+}
+
+    [data-bs-theme="dark"] .list-group-item:hover {
+        background-color: #32383e !important;
+    }

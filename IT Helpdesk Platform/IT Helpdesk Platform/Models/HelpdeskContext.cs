@@ -18,6 +18,8 @@ namespace IT_Helpdesk_Platform.Models
         public DbSet<Comment> Comments { get; set; }
         public DbSet<Attachment> Attachments { get; set; }
 
+        public DbSet<KnowledgeArticle> KnowledgeArticles { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

@@ -1,0 +1,54 @@
+﻿@model IT_Helpdesk_Platform.Models.KnowledgeArticle
+
+@{
+    ViewData["Title"] = "Article Details";
+
+    Layout = "~/Views/Shared/_AdministratorLayout.cshtml";
+}
+
+<div class="container main-container mt-4">
+    <h2 class="mb-4"><i class="bi bi-info-circle me-2"></i>Article #@Model.Id</h2>
+    
+    <div class="content-card shadow-sm p-4 bg-white rounded" style="max-width: 800px;">
+        <dl class="row mb-0">
+            <dt class="col-sm-3 text-muted mb-3">Category</dt>
+            <dd class="col-sm-9 mb-3">
+                @{
+                    string badgeClass = Model.Category switch
+                    {
+                        "Hardware" => "bg-primary",
+                        "Gear" => "bg-info",
+                        "Software" => "bg-warning",
+                        "Accounts" => "bg-purple",
+                        "Network" => "bg-success",
+                        "Security" => "bg-danger",
+                        _ => "bg-secondary"
+                    };
+                }
+                <span class="badge @badgeClass">@Model.Category</span>
+            </dd>
+            
+            <dt class="col-sm-3 text-muted mb-3">Title</dt>
+            <dd class="col-sm-9 fs-5 mb-3 fw-bold">@Model.Title</dd>
+            
+            <dt class="col-sm-3 text-muted mb-3">Theme</dt>
+            <dd class="col-sm-9 mb-3"><i class="bi @Model.IconClass @Model.ColorClass"></i> @Model.IconClass</dd>
+
+            <dt class="col-sm-3 text-muted mt-2">Content</dt>
+            <dd class="col-sm-9 mt-2">
+                <div class="p-3 bg-light rounded border text-dark">
+                    @Html.Raw(Model.Content)
+                </div>
+            </dd>
+        </dl>
+        
+        <div class="d-flex justify-content-between border-top pt-3 mt-4">
+            <a asp-action="Index" class="btn btn-light border">
+                <i class="bi bi-arrow-left me-1"></i> Back to List
+            </a>
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">
+                <i class="bi bi-pencil me-1"></i> Edit Article
+            </a>
+        </div>
+    </div>
+</div>

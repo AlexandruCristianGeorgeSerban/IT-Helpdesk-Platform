@@ -1,53 +1,41 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using IT_Helpdesk_Platform.Models;
+using IT_Helpdesk_Platform.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
-using IT_Helpdesk_Platform.Models;
 
 namespace IT_Helpdesk_Platform.Controllers
 {
     public class UsersController : Controller
     {
-        private readonly HelpdeskContext _context;
+        private readonly IUserService _userService;
+        private readonly IDepartmentService _departmentService;
 
-        public UsersController(HelpdeskContext context)
+        public UsersController(IUserService userService, IDepartmentService departmentService)
         {
-            _context = context;
+            _userService = userService;
+            _departmentService = departmentService;
         }
 
         // GET: Users
-        public async Task<IActionResult> Index()
+        public IActionResult Index(string? searchString)
         {
-            var helpdeskContext = _context.Users.Include(u => u.Department);
-            return View(await helpdeskContext.ToListAsync());
+            ViewData["CurrentFilter"] = searchString;
+            var users = _userService.GetAllUsers(searchString);
+            return View(users);
         }
 
         // GET: Users/Details/5
-        public async Task<IActionResult> Details(int? id)
+        public IActionResult Details(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var user = await _context.Users
-                .Include(u => u.Department)
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (user == null)
-            {
-                return NotFound();
-            }
-
-            return View(user);
+            if (id == null) return NotFound();
+            var user = _userService.GetUserById(id.Value);
+            return user == null ? NotFound() : View(user);
         }
 
         // GET: Users/Create
         public IActionResult Create()
         {
-            ViewData["DepartmentId"] = new SelectList(_context.Departments, "Id", "Name");
+            ViewData["DepartmentId"] = new SelectList(_departmentService.GetAllDepartments(), "Id", "Name");
             return View();
         }
 
@@ -56,128 +44,71 @@ namespace IT_Helpdesk_Platform.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,FirstName,LastName,Email,PasswordHash,Role,DepartmentId")] User user)
+        public IActionResult Create([Bind("Id,FirstName,LastName,Email,PasswordHash,Role,DepartmentId,PhoneNumber,EmailNotificationsEnabled,PushNotificationsEnabled")] User user)
         {
             ModelState.Remove("Department");
-
             if (ModelState.IsValid)
             {
-                _context.Add(user);
-                await _context.SaveChangesAsync();
+                _userService.CreateUser(user);
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["DepartmentId"] = new SelectList(_context.Departments, "Id", "Name", user.DepartmentId);
+            ViewData["DepartmentId"] = new SelectList(_departmentService.GetAllDepartments(), "Id", "Name", user.DepartmentId);
             return View(user);
         }
 
         // GET: Users/Edit/5
-        public async Task<IActionResult> Edit(int? id)
+        public IActionResult Edit(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
+            var user = _userService.GetUserById(id.Value);
+            if (user == null) return NotFound();
 
-            var user = await _context.Users.FindAsync(id);
-            if (user == null)
-            {
-                return NotFound();
-            }
-            ViewData["DepartmentId"] = new SelectList(_context.Departments, "Id", "Name", user.DepartmentId);
+            ViewData["DepartmentId"] = new SelectList(_departmentService.GetAllDepartments(), "Id", "Name", user.DepartmentId);
             return View(user);
         }
 
         // POST: Users/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,FirstName,LastName,Email,PasswordHash,Role,DepartmentId")] User user)
+        public IActionResult Edit(int id, [Bind("Id,FirstName,LastName,Email,PasswordHash,Role,DepartmentId,PhoneNumber,EmailNotificationsEnabled,PushNotificationsEnabled")] User user)
         {
-            if (id != user.Id)
-            {
-                return NotFound();
-            }
+            if (id != user.Id) return NotFound();
 
             ModelState.Remove("Department");
-
-            if (string.IsNullOrEmpty(user.PasswordHash))
-            {
-                ModelState.Remove("PasswordHash");
-            }
+            if (string.IsNullOrEmpty(user.PasswordHash)) ModelState.Remove("PasswordHash");
 
             if (ModelState.IsValid)
             {
                 try
                 {
-                    var existingUser = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == id);
-
-                    if (existingUser == null)
-                    {
-                        return NotFound();
-                    }
-
-                    if (string.IsNullOrEmpty(user.PasswordHash))
-                    {
-                        user.PasswordHash = existingUser.PasswordHash;
-                    }
-
-                    _context.Update(user);
-                    await _context.SaveChangesAsync();
+                    _userService.UpdateUser(user, user.PasswordHash);
                 }
-                catch (DbUpdateConcurrencyException)
+                catch
                 {
-                    if (!UserExists(user.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
+                    if (!_userService.UserExists(user.Id)) return NotFound();
+                    else throw;
                 }
                 return RedirectToAction(nameof(Index));
             }
-
-            ViewData["DepartmentId"] = new SelectList(_context.Departments, "Id", "Name", user.DepartmentId);
+            ViewData["DepartmentId"] = new SelectList(_departmentService.GetAllDepartments(), "Id", "Name", user.DepartmentId);
             return View(user);
         }
 
         // GET: Users/Delete/5
-        public async Task<IActionResult> Delete(int? id)
+        public IActionResult Delete(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var user = await _context.Users
-                .Include(u => u.Department)
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (user == null)
-            {
-                return NotFound();
-            }
-
-            return View(user);
+            if (id == null) return NotFound();
+            var user = _userService.GetUserById(id.Value);
+            return user == null ? NotFound() : View(user);
         }
 
         // POST: Users/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
+        public IActionResult DeleteConfirmed(int id)
         {
-            var user = await _context.Users.FindAsync(id);
-            if (user != null)
-            {
-                _context.Users.Remove(user);
-            }
-
-            await _context.SaveChangesAsync();
+            _userService.DeleteUser(id);
             return RedirectToAction(nameof(Index));
-        }
-
-        private bool UserExists(int id)
-        {
-            return _context.Users.Any(e => e.Id == id);
         }
     }
 }

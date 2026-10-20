@@ -2,10 +2,12 @@
 
 @{
     ViewData["Title"] = "Delete Ticket";
+
+    Layout = "~/Views/Shared/_AdministratorLayout.cshtml";
 }
 
 <div class="container main-container mt-4">
-    <h2 class="mb-4 text-danger"><i class="bi bi-exclamation-triangle-fill me-2"></i>Delete Ticket</h2>
+    <h2 class="mb-4 text-danger"><i class="bi bi-exclamation-triangle-fill me-2"></i>Delete Ticket #@Model.Id</h2>
     
     <div class="content-card shadow-sm p-4 bg-white rounded" style="max-width: 800px; border-top: 4px solid #dc3545;">
         <h4 class="mb-3">Are you sure you want to delete this ticket?</h4>
