@@ -1,4 +1,4 @@
-﻿using IT_Helpdesk_Platform.Models;
+using IT_Helpdesk_Platform.Models;
 using IT_Helpdesk_Platform.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -132,7 +132,7 @@ namespace IT_Helpdesk_Platform.Controllers
             return View(tickets);
         }
 
-        [Authorize(Roles = "Admin,Agent")]
+        [Authorize(Roles = "Admin, Agent")]
         public async Task<IActionResult> AllTickets(string searchString, string statusFilter, string priorityFilter)
         {
             var tickets = await _ticketService.GetFilteredTicketsAsync(null, searchString, statusFilter, priorityFilter);
@@ -285,7 +285,7 @@ namespace IT_Helpdesk_Platform.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "Admin,Agent")]
+        [Authorize(Roles = "Admin, Agent")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> UpdateTicketStatus(int TicketId, string Status, string Priority, int? AssignedAgentId)
         {

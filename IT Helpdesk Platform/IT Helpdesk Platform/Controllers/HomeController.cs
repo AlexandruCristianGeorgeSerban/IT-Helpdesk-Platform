@@ -32,13 +32,14 @@ namespace IT_Helpdesk_Platform.Controllers
         }
 
         // 2. Dashboard for users
+        [Authorize(Roles = "User")]
         public IActionResult UserDashboard()
         {
             return View();
         }
 
         // 3. Dashboard for IT agents
-        [Authorize(Roles = "Admin,Agent")]
+        [Authorize(Roles = "Admin, Agent")]
         public async Task<IActionResult> AgentDashboard()
         {
             var ticketsList = await _ticketService.GetAllTicketsAsync();
