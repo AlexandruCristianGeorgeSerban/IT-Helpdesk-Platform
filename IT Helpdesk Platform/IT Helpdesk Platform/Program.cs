@@ -15,9 +15,9 @@ builder.Services.AddControllersWithViews()
         options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
     });
 
-// Register HelpdeskContext with the SQL Server provider
+// Register HelpdeskContext with SQLite provider
 builder.Services.AddDbContext<HelpdeskContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // --- 1. AUTHENTICATION SYSTEM SETUP ---
 // This must be the ONLY Identity registration
@@ -86,24 +86,7 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=GuestDashboard}/{id?}");
 
-// --- 6. ROLE CREATION ON STARTUP ---
-// Ensures that the default roles exist in the database when the app starts
-using (var scope = app.Services.CreateScope())
-{
-    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole<int>>>();
-    string[] roleNames = { "Admin", "Agent", "User" };
-
-    foreach (var roleName in roleNames)
-    {
-        // If the role doesn't exist, create it
-        if (!await roleManager.RoleExistsAsync(roleName))
-        {
-            await roleManager.CreateAsync(new IdentityRole<int>(roleName));
-        }
-    }
-}
-
-// --- 7. SEEDING DATABASE ---
+// --- 6. DATABASE MIGRATION & SEEDING ---
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -113,14 +96,16 @@ using (var scope = app.Services.CreateScope())
         var userManager = services.GetRequiredService<UserManager<User>>();
         var roleManager = services.GetRequiredService<RoleManager<IdentityRole<int>>>();
 
+        // Ensure database schema is migrated first
         context.Database.Migrate();
 
+        // Seed roles, departments, categories, users, knowledge articles, tickets, and comments
         await IT_Helpdesk_Platform.Data.DbSeeder.SeedAsync(services, context, userManager, roleManager);
     }
     catch (Exception ex)
     {
         var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "An error occurred while seeding the database.");
+        logger.LogError(ex, "An error occurred while migrating and seeding the database.");
     }
 }
 // -----------------------------
