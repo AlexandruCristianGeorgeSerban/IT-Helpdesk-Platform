@@ -1,3 +1,4 @@
 <Solution>
   <Project Path="IT Helpdesk Platform/IT Helpdesk Platform.csproj" />
+  <Project Path="ITHelpdesk.Tests/ITHelpdesk.Tests.csproj" />
 </Solution>
