@@ -186,77 +186,143 @@ namespace IT_Helpdesk_Platform.Data
             }
 
             // 5. SEED KNOWLEDGE BASE ARTICLES (For TF-IDF & Cosine Similarity Recommendations)
-            if (!context.KnowledgeArticles.Any())
+            var articles = new List<KnowledgeArticle>
             {
-                var articles = new List<KnowledgeArticle>
+                new()
                 {
-                    new()
-                    {
-                        Title = "Fixing Laptop Screen Flickering and Black Display Flashes",
-                        Category = "Hardware",
-                        IconClass = "bi-display",
-                        ColorClass = "text-primary",
-                        Content = "If your laptop screen flickers or flashes black every few seconds while a secondary monitor works fine, open Software Center, update the Intel/NVIDIA graphics drivers, and set the internal display refresh rate to 60Hz in Display Settings."
-                    },
-                    new()
-                    {
-                        Title = "Troubleshooting Company VPN Connection Timed Out & Auth Errors",
-                        Category = "Network",
-                        IconClass = "bi-shield-lock",
-                        ColorClass = "text-danger",
-                        Content = "When the VPN client reports a connection timeout or authentication error after a password reset, clear cached credentials in Windows Credential Manager, restart the Cisco AnyConnect / OpenVPN service, and re-authenticate using your new domain password and MFA token."
-                    },
-                    new()
-                    {
-                        Title = "How to Reset Locked Domain Account and Expired Windows Password",
-                        Category = "Access & Security",
-                        IconClass = "bi-key",
-                        ColorClass = "text-warning",
-                        Content = "If your workstation account is locked out after multiple failed login attempts or your password expired, use the Self-Service Password Portal or contact System Administration to unlock Active Directory credentials."
-                    },
-                    new()
-                    {
-                        Title = "Resolving Outlook Email Sync Issues and Attachment Crashes",
-                        Category = "Software",
-                        IconClass = "bi-envelope-exclamation",
-                        ColorClass = "text-info",
-                        Content = "If Microsoft Outlook fails to synchronize incoming emails, hangs on 'Trying to connect', or crashes when opening PDF attachments, start Outlook in Safe Mode (outlook.exe /safe), disable faulty COM add-ins, and rebuild the local .OST data file."
-                    },
-                    new()
-                    {
-                        Title = "Office Wi-Fi Dropping Signal and Slow Wireless Network Speeds",
-                        Category = "Network",
-                        IconClass = "bi-wifi",
-                        ColorClass = "text-success",
-                        Content = "For intermittent wireless disconnects on the corporate Wi-Fi SSID, forget the network profile, update the WLAN adapter driver, and ensure 802.1X certificate authentication is enabled on the 5GHz band."
-                    },
-                    new()
-                    {
-                        Title = "Requesting Software Installation & Development Licenses (Visual Studio, SQL)",
-                        Category = "Software",
-                        IconClass = "bi-code-square",
-                        ColorClass = "text-secondary",
-                        Content = "Standard applications can be installed directly from the company Software Center without administrator rights. For licensed tools like Visual Studio Enterprise, JetBrains, or SQL Server Management Studio, submit a Software ticket with manager approval."
-                    },
-                    new()
-                    {
-                        Title = "External USB Keyboard, Mouse & Docking Station Not Recognized",
-                        Category = "Hardware",
-                        IconClass = "bi-keyboard",
-                        ColorClass = "text-primary",
-                        Content = "Disconnect the USB-C docking station from power for 30 seconds, plug peripherals directly into the laptop USB ports to isolate hardware faults, and install the latest Thunderbolt firmware update."
-                    },
-                    new()
-                    {
-                        Title = "Shared Network Drive & HR Folder Permission Requests",
-                        Category = "Access & Security",
-                        IconClass = "bi-folder-check",
-                        ColorClass = "text-warning",
-                        Content = "To gain read or write access to department shared folders (e.g., \\\\fileserver\\HR), specify the exact network path and your department manager in the ticket description so security groups can be updated."
-                    }
-                };
+                    Title = "Fixing Laptop Screen Flickering and Black Display Flashes",
+                    Category = "Hardware",
+                    IconClass = "bi-display",
+                    ColorClass = "text-primary",
+                    Content = "If your laptop screen flickers or flashes black every few seconds while a secondary monitor works fine, open Software Center, update the Intel/NVIDIA graphics drivers, and set the internal display refresh rate to 60Hz in Display Settings."
+                },
+                new()
+                {
+                    Title = "Troubleshooting Company VPN Connection Timed Out & Auth Errors",
+                    Category = "Network",
+                    IconClass = "bi-shield-lock",
+                    ColorClass = "text-danger",
+                    Content = "When the VPN client reports a connection timeout or authentication error after a password reset, clear cached credentials in Windows Credential Manager, restart the Cisco AnyConnect / OpenVPN service, and re-authenticate using your new domain password and MFA token."
+                },
+                new()
+                {
+                    Title = "How to Reset Locked Domain Account and Expired Windows Password",
+                    Category = "Access & Security",
+                    IconClass = "bi-key",
+                    ColorClass = "text-warning",
+                    Content = "If your workstation account is locked out after multiple failed login attempts or your password expired, use the Self-Service Password Portal or contact System Administration to unlock Active Directory credentials."
+                },
+                new()
+                {
+                    Title = "Resolving Outlook Email Sync Issues and Attachment Crashes",
+                    Category = "Software",
+                    IconClass = "bi-envelope-exclamation",
+                    ColorClass = "text-info",
+                    Content = "If Microsoft Outlook fails to synchronize incoming emails, hangs on 'Trying to connect', or crashes when opening PDF attachments, start Outlook in Safe Mode (outlook.exe /safe), disable faulty COM add-ins, and rebuild the local .OST data file."
+                },
+                new()
+                {
+                    Title = "Office Wi-Fi Dropping Signal and Slow Wireless Network Speeds",
+                    Category = "Network",
+                    IconClass = "bi-wifi",
+                    ColorClass = "text-success",
+                    Content = "For intermittent wireless disconnects on the corporate Wi-Fi SSID, forget the network profile, update the WLAN adapter driver, and ensure 802.1X certificate authentication is enabled on the 5GHz band."
+                },
+                new()
+                {
+                    Title = "Requesting Software Installation & Development Licenses (Visual Studio, SQL)",
+                    Category = "Software",
+                    IconClass = "bi-code-square",
+                    ColorClass = "text-secondary",
+                    Content = "Standard applications can be installed directly from the company Software Center without administrator rights. For licensed tools like Visual Studio Enterprise, JetBrains, or SQL Server Management Studio, submit a Software ticket with manager approval."
+                },
+                new()
+                {
+                    Title = "External USB Keyboard, Mouse & Docking Station Not Recognized",
+                    Category = "Hardware",
+                    IconClass = "bi-keyboard",
+                    ColorClass = "text-primary",
+                    Content = "Disconnect the USB-C docking station from power for 30 seconds, plug peripherals directly into the laptop USB ports to isolate hardware faults, and install the latest Thunderbolt firmware update."
+                },
+                new()
+                {
+                    Title = "Shared Network Drive & HR Folder Permission Requests",
+                    Category = "Access & Security",
+                    IconClass = "bi-folder-check",
+                    ColorClass = "text-warning",
+                    Content = "To gain read or write access to department shared folders (e.g., \\\\fileserver\\HR), specify the exact network path and your department manager in the ticket description so security groups can be updated."
+                },
+                new()
+                {
+                    Title = "Fixing Microphone and Audio Output Issues in Teams and Zoom",
+                    Category = "Hardware",
+                    IconClass = "bi-mic-mute",
+                    ColorClass = "text-primary",
+                    Content = "If colleagues cannot hear you in Microsoft Teams or Zoom meetings, check the physical mute switch on your headset, verify Windows Settings > Privacy & Security > Microphone permissions are granted to desktop apps, and set the default audio endpoint to your USB headset."
+                },
+                new()
+                {
+                    Title = "BitLocker Recovery Key Prompt on Blue Screen at Startup",
+                    Category = "Access & Security",
+                    IconClass = "bi-shield-exclamation",
+                    ColorClass = "text-danger",
+                    Content = "If Windows boots into a blue BitLocker recovery screen asking for a 48-digit numerical key after a BIOS update or motherboard swap, sign in to your Microsoft / Azure AD portal under Devices or contact the IT Helpdesk to retrieve your BitLocker recovery key."
+                },
+                new()
+                {
+                    Title = "Resolving Network Printer Paper Jams and Clearing Print Spooler Queue",
+                    Category = "Hardware",
+                    IconClass = "bi-printer",
+                    ColorClass = "text-primary",
+                    Content = "When the floor printer stops printing or reports a paper jam error, inspect paper tray 2 and the rear access door for stuck sheets. If jobs remain stuck in the queue, open services.msc, stop the Print Spooler service, delete all files in C:\\Windows\\System32\\spool\\PRINTERS, and restart the Spooler."
+                },
+                new()
+                {
+                    Title = "Excel Freezing on Large Spreadsheets & How to Disable COM Add-ins",
+                    Category = "Software",
+                    IconClass = "bi-file-earmark-spreadsheet",
+                    ColorClass = "text-info",
+                    Content = "If Microsoft Excel hangs or freezes when calculating formulas or opening large workbooks with macros, open File > Options > Add-ins, select COM Add-ins from the Manage dropdown, click Go, and uncheck third-party add-ins."
+                },
+                new()
+                {
+                    Title = "Dual Monitor Not Detected via HDMI, DisplayPort, or USB-C Hub",
+                    Category = "Hardware",
+                    IconClass = "bi-display-fill",
+                    ColorClass = "text-primary",
+                    Content = "If your external monitor displays 'No Signal' or is not detected in Windows Display Settings, press Windows Key + P to verify Extend mode is chosen, reseat the HDMI/DisplayPort cable firmly, and test the monitor directly without the USB hub."
+                },
+                new()
+                {
+                    Title = "Multi-Factor Authentication (MFA) Push Notifications Not Received",
+                    Category = "Access & Security",
+                    IconClass = "bi-phone",
+                    ColorClass = "text-warning",
+                    Content = "If you are not receiving Microsoft Authenticator or Duo push notifications on your mobile phone, ensure battery saver mode is disabled for the app, check internet connectivity, or click 'Sign in another way' to use the 6-digit rolling code."
+                },
+                new()
+                {
+                    Title = "Fixing High CPU Usage and Overheating Laptop Fan Noise",
+                    Category = "Hardware",
+                    IconClass = "bi-cpu",
+                    ColorClass = "text-primary",
+                    Content = "If your laptop fan runs continuously at maximum speed and the chassis feels hot, open Task Manager (Ctrl+Shift+Esc) to identify runaway background processes, clear dust from air vents, and select Balanced power mode in Windows battery settings."
+                },
+                new()
+                {
+                    Title = "Windows Update Error 0x80070002 or Installation Stalled at 100%",
+                    Category = "Software",
+                    IconClass = "bi-arrow-clockwise",
+                    ColorClass = "text-info",
+                    Content = "If cumulative Windows quality or security updates fail with error 0x80070002, run the built-in Windows Update Troubleshooter, launch command prompt as Administrator, and execute 'DISM /Online /Cleanup-Image /RestoreHealth' followed by 'sfc /scannow'."
+                }
+            };
 
-                context.KnowledgeArticles.AddRange(articles);
+            var existingTitles = await context.KnowledgeArticles.Select(a => a.Title).ToListAsync();
+            var newArticles = articles.Where(a => !existingTitles.Contains(a.Title)).ToList();
+            if (newArticles.Any())
+            {
+                context.KnowledgeArticles.AddRange(newArticles);
                 await context.SaveChangesAsync();
             }
 

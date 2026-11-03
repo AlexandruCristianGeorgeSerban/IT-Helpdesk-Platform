@@ -1,4 +1,4 @@
-﻿@model IT_Helpdesk_Platform.Models.Ticket
+@model IT_Helpdesk_Platform.Models.Ticket
 
 @{
     ViewData["Title"] = "Ticket Details";
@@ -210,6 +210,41 @@
                     </li>
                 </ul>
             </div>
+
+            @if (ViewBag.SimilarTickets is List<IT_Helpdesk_Platform.Models.ML.SimilarTicketDto> similarTickets && similarTickets.Any())
+            {
+                <div class="content-card border-info border shadow-sm bg-white p-3 rounded mb-4">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <h6 class="mb-0 fw-bold text-primary">
+                            <i class="bi bi-clock-history text-primary me-2"></i>Similar Resolved Tickets
+                        </h6>
+                        <span class="badge bg-info-subtle text-info border border-info-subtle rounded-pill">TF-IDF</span>
+                    </div>
+                    @if (isITStaff)
+                    {
+                        <p class="small text-muted mb-3">Historical tickets with matching symptoms resolved by IT staff:</p>
+                    }
+                    else
+                    {
+                        <p class="small text-muted mb-3">Your previous tickets with matching symptoms resolved by IT staff:</p>
+                    }
+                    <div class="list-group list-group-flush rounded">
+                        @foreach (var sim in similarTickets)
+                        {
+                            <a asp-action="ViewTicket" asp-route-id="@sim.TicketId" class="list-group-item list-group-item-action px-2 py-2 border-0 border-bottom">
+                                <div class="d-flex w-100 justify-content-between align-items-center">
+                                    <span class="small fw-bold text-dark text-truncate me-2" style="max-width: 180px;" title="@sim.Title">
+                                        #@sim.TicketId - @sim.Title
+                                    </span>
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill flex-shrink-0">
+                                        @sim.Similarity% match
+                                    </span>
+                                </div>
+                            </a>
+                        }
+                    </div>
+                </div>
+            }
 
             @if (isITStaff)
             {

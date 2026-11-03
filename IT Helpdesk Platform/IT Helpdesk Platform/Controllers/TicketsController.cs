@@ -14,12 +14,18 @@ namespace IT_Helpdesk_Platform.Controllers
         private readonly ITicketService _ticketService;
         private readonly ICategoryService _categoryService;
         private readonly UserManager<User> _userManager;
+        private readonly IRecommendationService _recommendationService;
 
-        public TicketsController(ITicketService ticketService, ICategoryService categoryService, UserManager<User> userManager)
+        public TicketsController(
+            ITicketService ticketService,
+            ICategoryService categoryService,
+            UserManager<User> userManager,
+            IRecommendationService recommendationService)
         {
             _ticketService = ticketService;
             _categoryService = categoryService;
             _userManager = userManager;
+            _recommendationService = recommendationService;
         }
 
         [Authorize(Roles = "Admin")]
@@ -179,6 +185,13 @@ namespace IT_Helpdesk_Platform.Controllers
             return View(model);
         }
 
+        [HttpGet]
+        public async Task<JsonResult> GetKbSuggestions(string query)
+        {
+            var suggestions = await _recommendationService.GetRecommendedArticlesAsync(query, topK: 3);
+            return Json(suggestions);
+        }
+
         public async Task<IActionResult> ViewTicket(int id)
         {
             var ticket = await _ticketService.GetTicketDetailsAsync(id);
@@ -195,6 +208,11 @@ namespace IT_Helpdesk_Platform.Controllers
             var staffList = supportStaff.Select(u => new { Id = u.Id, FullName = u.FirstName + " " + u.LastName }).ToList();
 
             ViewBag.Agents = new SelectList(staffList, "Id", "FullName");
+
+            bool isStaff = currentUser?.Role == "Admin" || currentUser?.Role == "Agent";
+            int? requesterFilter = isStaff ? null : currentUser?.Id;
+
+            ViewBag.SimilarTickets = await _recommendationService.GetSimilarResolvedTicketsAsync(id, topK: 3, requesterId: requesterFilter);
 
             return View(ticket);
         }

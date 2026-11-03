@@ -5,7 +5,7 @@ namespace ITHelpdesk.Tests
 {
     public class HelpdeskSystemTests
     {
-        // 1. TEST BASELINE: Verifică regulile de SLA în funcție de prioritatea tichetului
+        // 1. BASELINE TEST: Validates SLA deadline calculation according to ticket priority
         [Theory]
         [InlineData("High", 4)]
         [InlineData("Medium", 24)]
@@ -27,14 +27,14 @@ namespace ITHelpdesk.Tests
             Assert.Equal(expectedHours, (dueDate - createdAt).TotalHours);
         }
 
-        // 2. TEST SMART LOAD BALANCING: Verifică formula ponderată (Low=1, Medium=2, High=3)
+        // 2. SMART LOAD BALANCING TEST: Validates weighted formula (Low=1, Medium=2, High=3)
         [Fact]
         public void WeightedAgentWorkload_ShouldSelectLeastLoadedAgent()
         {
             // Arrange:
-            // Agent 1 are 2 tichete High (2 * 3 = 6) + 1 Medium (2) = Scor 8
-            // Agent 2 are 1 tichet Medium (2) + 2 Low (2 * 1 = 2) = Scor 4
-            // Agent 3 are 1 tichet High (3) = Scor 3 (Cel mai liber -> trebuie ales)
+            // Agent 1 has 2 High tickets (2 * 3 = 6) + 1 Medium (2) = Score 8
+            // Agent 2 has 1 Medium ticket (2) + 2 Low (2 * 1 = 2) = Score 4
+            // Agent 3 has 1 High ticket (3) = Score 3 (Least loaded -> must be selected)
             var agentTickets = new Dictionary<int, List<string>>
             {
                 { 101, new List<string> { "High", "High", "Medium" } },
@@ -68,7 +68,7 @@ namespace ITHelpdesk.Tests
             Assert.Equal(103, selectedAgentId);
         }
 
-        // 3. TEST TF-IDF & COSINE SIMILARITY: Verifică relevanța semantică și latența < 100 ms
+        // 3. TF-IDF & COSINE SIMILARITY TEST: Validates semantic relevance and latency < 100 ms
         [Fact]
         public void CosineSimilarity_MatchingSymptomVectors_ShouldReturnHighScoreUnder100Ms()
         {
@@ -89,7 +89,7 @@ namespace ITHelpdesk.Tests
             Assert.True(sw.ElapsedMilliseconds < 100, $"Execution took {sw.ElapsedMilliseconds} ms (Target: < 100 ms).");
         }
 
-        // 4. TEST TEXT TOKENIZER & STOP-WORDS: Verifică curățarea textului pentru NLP
+        // 4. TEXT TOKENIZER & STOP-WORDS TEST: Validates text cleaning and normalization for NLP
         [Fact]
         public void Tokenizer_ShouldRemoveStopWordsAndKeepTechnicalKeywords()
         {
