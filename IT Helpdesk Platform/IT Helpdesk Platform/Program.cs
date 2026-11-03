@@ -1,4 +1,5 @@
 using IT_Helpdesk_Platform.Models;
+using IT_Helpdesk_Platform.Data;
 using IT_Helpdesk_Platform.Repositories;
 using IT_Helpdesk_Platform.Repositories.Interfaces;
 using IT_Helpdesk_Platform.Services;
@@ -62,6 +63,7 @@ builder.Services.AddScoped<ITicketService, TicketService>();
 builder.Services.AddScoped<IKnowledgeBaseService, KnowledgeBaseService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IRecommendationService, RecommendationService>();
 
 var app = builder.Build();
 
@@ -100,7 +102,7 @@ using (var scope = app.Services.CreateScope())
         context.Database.Migrate();
 
         // Seed roles, departments, categories, users, knowledge articles, tickets, and comments
-        await IT_Helpdesk_Platform.Data.DbSeeder.SeedAsync(services, context, userManager, roleManager);
+        await DbSeeder.SeedAsync(services, context, userManager, roleManager);
     }
     catch (Exception ex)
     {

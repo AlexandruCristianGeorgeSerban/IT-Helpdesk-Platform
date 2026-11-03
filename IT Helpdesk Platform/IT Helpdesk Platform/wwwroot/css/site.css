@@ -265,6 +265,25 @@ body {
     color: #f8f9fa !important;
 }
 
+/* Preserve colored borders on cards in Dark Mode */
+[data-bs-theme="dark"] .border-info,
+[data-bs-theme="dark"] .content-card.border-info,
+[data-bs-theme="dark"] .card.border-info {
+    border: 1px solid #0dcaf0 !important;
+}
+
+[data-bs-theme="dark"] .border-success,
+[data-bs-theme="dark"] .content-card.border-success,
+[data-bs-theme="dark"] .card.border-success {
+    border: 2px solid #198754 !important;
+}
+
+[data-bs-theme="dark"] .border-primary,
+[data-bs-theme="dark"] .content-card.border-primary,
+[data-bs-theme="dark"] .card.border-primary {
+    border: 1px solid #0d6efd !important;
+}
+
 /* Ticket Chat Bubble */
 [data-bs-theme="dark"] .chat-bubble {
     background-color: #2b3035;
