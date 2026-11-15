@@ -21,10 +21,10 @@ jobs:
           dotnet-version: '10.0.x'
 
       - name: 3. Restore NuGet Dependencies
-        run: dotnet restore
+        run: dotnet restore "IT Helpdesk Platform/IT Helpdesk Platform.slnx"
 
       - name: 4. Build Solution & Check Warnings (Linter Gate)
-        run: dotnet build --no-restore --configuration Release
+        run: dotnet build "IT Helpdesk Platform/IT Helpdesk Platform.slnx" --no-restore --configuration Release
 
       - name: 5. Run Automated xUnit Tests
-        run: dotnet test --no-build --configuration Release --verbosity normal
+        run: dotnet test "IT Helpdesk Platform/IT Helpdesk Platform.slnx" --no-build --configuration Release --verbosity normal

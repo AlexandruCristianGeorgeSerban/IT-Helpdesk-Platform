@@ -118,7 +118,7 @@ In accordance with the **Tools for Program Development** evaluation criteria, pr
 - [x] **P3 Milestone 1 (`Report 1 – Project Proposal`, Weeks 1–3):** Functional & non-functional specifications, toolchain selection, and UML Use Case modeling (Baseline vs. Project III scope).
   - 📄 *Artifacts:* [Project Proposal Report (PDF)](Docs/Project%203%20Tools/Report%201%20-%20Project%20Proposal/IT_Helpdesk_Report1_Project_Proposal.pdf) · [Presentation (PPTX)](Docs/Project%203%20Tools/Report%201%20-%20Project%20Proposal/IT_Helpdesk_Report1_Project_Proposal.pptx)
 - [x] **P3 Milestone 2 (`Report 2 – Minimal Design & Prototype`, Weeks 4–7):**
-  - 📄 *Design Artifacts:* [Class & Architecture Diagram](Docs/Project%203%20Tools/Report%202%20%20-%20Intermediary/Class%20Diagram%20and%20Architecture.png) · [Prototype Sequence Diagram](Docs/Project%203%20Tools/Report%202%20%20-%20Intermediary/Prototype%20Sequence%20Diagram.png)
+  - 📄 *Artifacts:* [Intermediary Report (PDF)](Docs/Project%203%20Tools/Report%202%20-%20Intermediary/IT_Helpdesk_Report2_Intermediary.pdf) · [Presentation (PPTX)](Docs/Project%203%20Tools/Report%202%20-%20Intermediary/IT_Helpdesk_Report2_Intermediary.pptx) · [Class & Architecture Diagram](Docs/Project%203%20Tools/Report%202%20-%20Intermediary/Class%20Diagram%20and%20Architecture.png) · [Prototype Sequence Diagram](Docs/Project%203%20Tools/Report%202%20-%20Intermediary/Prototype%20Sequence%20Diagram.png)
   - UML Class/Component Diagram and 3-Phase UML Sequence Diagram.
   - Prototype implementation of `RecommendationService` (TF-IDF & Cosine Similarity).
   - Prototype implementation of `TicketPredictionService` (ML.NET auto-classification).
