@@ -198,7 +198,48 @@
                     </li>
                     <li class="mb-3">
                         <span class="text-muted d-block small fw-bold">Created</span>
-                        <strong>@Model.CreatedAt.ToString("MMM dd, yyyy")</strong>
+                        <strong>@Model.CreatedAt.ToString("MMM dd, yyyy, HH:mm")</strong>
+                    </li>
+                    <li class="mb-3">
+                        <span class="text-muted d-block small fw-bold">SLA Due Date</span>
+                        @if (Model.DueDate.HasValue)
+                        {
+                            bool isResolved = Model.Status == "Resolved" || Model.Status == "Closed";
+                            bool isBreached = !isResolved && DateTime.UtcNow > Model.DueDate.Value;
+                            bool isApproaching = !isResolved && !isBreached && (Model.DueDate.Value - DateTime.UtcNow).TotalHours < 4;
+
+                            <div class="d-flex align-items-center flex-wrap gap-2 mt-1">
+                                <span>@Model.DueDate.Value.ToString("MMM dd, yyyy, HH:mm")</span>
+                                @if (isResolved)
+                                {
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill small">
+                                        <i class="bi bi-check-all me-1"></i>SLA Met
+                                    </span>
+                                }
+                                else if (isBreached)
+                                {
+                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill small">
+                                        <i class="bi bi-exclamation-triangle-fill me-1"></i>SLA Breached
+                                    </span>
+                                }
+                                else if (isApproaching)
+                                {
+                                    <span class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill small">
+                                        <i class="bi bi-hourglass-split me-1"></i>SLA &lt; 4h
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-info-subtle text-info border border-info-subtle rounded-pill small">
+                                        <i class="bi bi-shield-check me-1"></i>SLA On Track
+                                    </span>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <span class="text-muted">Not specified</span>
+                        }
                     </li>
                     <li class="mb-3">
                         <span class="text-muted d-block small fw-bold">Priority</span>
@@ -206,7 +247,29 @@
                     </li>
                     <li class="mb-0">
                         <span class="text-muted d-block small fw-bold">Assigned to</span>
-                        <strong>@(Model.AssignedAgent != null ? $"{Model.AssignedAgent.FirstName} {Model.AssignedAgent.LastName}" : "Unassigned")</strong>
+                        <div class="d-flex align-items-center flex-wrap gap-2 mt-1">
+                            <strong>@(Model.AssignedAgent != null ? $"{Model.AssignedAgent.FirstName} {Model.AssignedAgent.LastName}" : "Unassigned")</strong>
+                            @if (isITStaff)
+                            {
+                                @if (isResolvedOrClosed)
+                                {
+                                    <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle rounded-pill small" title="Ticket is resolved - no active workload points attributed">
+                                        <i class="bi bi-check-circle me-1"></i>0 pts (Resolved)
+                                    </span>
+                                }
+                                else if (Model.AssignedAgent != null && ViewBag.CurrentAgentLoad != null)
+                                {
+                                    int curLoad = (int)ViewBag.CurrentAgentLoad;
+                                    string loadBadgeClass = curLoad <= 3 
+                                        ? "bg-success-subtle text-success border-success-subtle" 
+                                        : (curLoad <= 6 ? "bg-warning-subtle text-warning border-warning-subtle" : "bg-danger-subtle text-danger border-danger-subtle");
+
+                                    <span class="badge @loadBadgeClass border rounded-pill small" title="Agent's overall active workload from pending tickets">
+                                        <i class="bi bi-speedometer2 me-1"></i>Active Load: @curLoad pts
+                                    </span>
+                                }
+                            }
+                        </div>
                     </li>
                 </ul>
             </div>
@@ -277,10 +340,34 @@
                         </div>
                         
                         <div class="mb-4">
-                            <label class="form-label small fw-bold text-muted">Assign To</label>
-                            <select name="AssignedAgentId" class="form-select form-select-sm" asp-for="AssignedAgentId" asp-items="ViewBag.Agents">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <label class="form-label small fw-bold text-muted mb-0">Assign To</label>
+                                <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none small" onclick="autoSelectLeastLoadedAgent()">
+                                    <i class="bi bi-lightning-charge-fill text-warning me-1"></i>Least Loaded
+                                </button>
+                            </div>
+                            <select id="assignedAgentSelect" name="AssignedAgentId" class="form-select form-select-sm" asp-for="AssignedAgentId">
                                 <option value="">-- Unassigned --</option>
+                                @if (ViewBag.SupportAgents != null)
+                                {
+                                    <optgroup label="Support Agents">
+                                        @foreach (var agent in ViewBag.SupportAgents)
+                                        {
+                                            <option value="@agent.Id">@agent.Name</option>
+                                        }
+                                    </optgroup>
+                                }
+                                @if (ViewBag.Administrators != null)
+                                {
+                                    <optgroup label="Administrators">
+                                        @foreach (var admin in ViewBag.Administrators)
+                                        {
+                                            <option value="@admin.Id">@admin.Name</option>
+                                        }
+                                    </optgroup>
+                                }
                             </select>
+                            <div id="smartRoutingNotice" class="small text-muted mt-1 d-none"></div>
                         </div>
                         
                         <button type="submit" class="btn btn-success btn-sm w-100 fw-bold shadow-sm">
@@ -388,6 +475,30 @@
                 error: function () {
                     alert('Error sending reply.');
                     $btn.prop('disabled', false).html('<i class="bi bi-reply-fill me-1"></i> Send Reply');
+                }
+            });
+        }
+
+        function autoSelectLeastLoadedAgent() {
+            const $notice = $('#smartRoutingNotice');
+            $notice.removeClass('d-none').html('<span class="spinner-border spinner-border-sm me-1"></span> Calculating least loaded agent...');
+
+            $.ajax({
+                url: '/Tickets/GetLeastLoadedAgent',
+                type: 'GET',
+                data: { categoryId: '@Model.CategoryId' },
+                success: function (res) {
+                    if (res && res.success && res.agentId) {
+                        $('#assignedAgentSelect').val(res.agentId);
+                        $notice.removeClass('d-none').html(
+                            `<i class="bi bi-check-circle-fill text-success me-1"></i> Auto-selected: <strong>${res.agentName}</strong> (${res.workload} pts load)`
+                        );
+                    } else {
+                        $notice.removeClass('d-none').html('<span class="text-danger">No available agents found.</span>');
+                    }
+                },
+                error: function () {
+                    $notice.removeClass('d-none').html('<span class="text-danger">Failed to auto-select agent.</span>');
                 }
             });
         }

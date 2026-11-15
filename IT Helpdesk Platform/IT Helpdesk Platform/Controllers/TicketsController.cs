@@ -229,6 +229,22 @@ namespace IT_Helpdesk_Platform.Controllers
             return Json(prediction);
         }
 
+        [HttpGet]
+        public async Task<JsonResult> GetLeastLoadedAgent(int? categoryId)
+        {
+            var agent = await _ticketService.GetLeastLoadedAgentAsync(categoryId);
+            if (agent == null) return Json(new { success = false });
+
+            int workload = await _ticketService.CalculateAgentWorkloadScoreAsync(agent.Id);
+            return Json(new
+            {
+                success = true,
+                agentId = agent.Id,
+                agentName = $"{agent.FirstName} {agent.LastName}",
+                workload = workload
+            });
+        }
+
         public async Task<IActionResult> ViewTicket(int id)
         {
             var ticket = await _ticketService.GetTicketDetailsAsync(id);
@@ -242,9 +258,43 @@ namespace IT_Helpdesk_Platform.Controllers
             }
 
             var supportStaff = await _ticketService.GetSupportStaffAsync();
-            var staffList = supportStaff.Select(u => new { Id = u.Id, FullName = u.FirstName + " " + u.LastName }).ToList();
+            var workloads = await _ticketService.GetStaffWorkloadScoresAsync();
 
-            ViewBag.Agents = new SelectList(staffList, "Id", "FullName");
+            var agentsList = supportStaff
+                .Where(u => string.Equals(u.Role, "Agent", StringComparison.OrdinalIgnoreCase))
+                .OrderBy(u => workloads.GetValueOrDefault(u.Id, 0))
+                .Select(u =>
+                {
+                    int load = workloads.GetValueOrDefault(u.Id, 0);
+                    string tier = load <= 3 ? "Low" : (load <= 6 ? "Medium" : "High");
+                    return new
+                    {
+                        Id = u.Id,
+                        Name = $"{u.FirstName} {u.LastName} (Load: {load} pts - {tier})"
+                    };
+                }).ToList();
+
+            var adminsList = supportStaff
+                .Where(u => string.Equals(u.Role, "Admin", StringComparison.OrdinalIgnoreCase))
+                .OrderBy(u => workloads.GetValueOrDefault(u.Id, 0))
+                .Select(u =>
+                {
+                    int load = workloads.GetValueOrDefault(u.Id, 0);
+                    string tier = load <= 3 ? "Low" : (load <= 6 ? "Medium" : "High");
+                    return new
+                    {
+                        Id = u.Id,
+                        Name = $"{u.FirstName} {u.LastName} (Load: {load} pts - {tier})"
+                    };
+                }).ToList();
+
+            ViewBag.SupportAgents = agentsList;
+            ViewBag.Administrators = adminsList;
+            ViewBag.StaffWorkloads = workloads;
+            if (ticket.AssignedAgentId.HasValue)
+            {
+                ViewBag.CurrentAgentLoad = workloads.GetValueOrDefault(ticket.AssignedAgentId.Value, 0);
+            }
 
             bool isStaff = currentUser?.Role == "Admin" || currentUser?.Role == "Agent";
             int? requesterFilter = isStaff ? null : currentUser?.Id;
