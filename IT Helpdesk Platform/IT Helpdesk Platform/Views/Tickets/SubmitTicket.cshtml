@@ -19,16 +19,26 @@
                         <span asp-validation-for="Title" class="text-danger small"></span>
                     </div>
 
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label asp-for="CategoryId" class="form-label fw-bold">Category</label>
+                    <div class="row mb-3">
+                        <div class="col-md-6 mb-3 mb-md-0">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <label asp-for="CategoryId" class="form-label fw-bold mb-0">Category</label>
+                                <span id="aiCategoryBadge" class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill d-none small">
+                                    <i class="bi bi-robot me-1"></i>AI Suggested
+                                </span>
+                            </div>
                             <select asp-for="CategoryId" class="form-select" asp-items="ViewBag.CategoryList">
-                                  <option selected disabled value="">Select category...</option>
+                                <option selected disabled value="">Select category...</option>
                             </select>
                             <span asp-validation-for="CategoryId" class="text-danger small"></span>
                         </div>
-                        <div class="col-md-6 mb-3">
-                            <label asp-for="Priority" class="form-label fw-bold">Priority Level</label>
+                        <div class="col-md-6">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <label asp-for="Priority" class="form-label fw-bold mb-0">Priority Level</label>
+                                <span id="aiPriorityBadge" class="badge bg-info-subtle text-info border border-info-subtle rounded-pill d-none small">
+                                    <i class="bi bi-robot me-1"></i>AI Suggested
+                                </span>
+                            </div>
                             <select asp-for="Priority" class="form-select">
                                 <option value="Low">Low</option>
                                 <option value="Medium" selected>Medium</option>
@@ -37,6 +47,13 @@
                             </select>
                             <span asp-validation-for="Priority" class="text-danger small"></span>
                         </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <button type="button" id="btnAutoPredict" class="btn btn-outline-primary btn-sm rounded-pill px-3 shadow-sm" onclick="runAiPrediction()">
+                            <i class="bi bi-robot me-1"></i> Auto-Detect with AI (ML.NET)
+                        </button>
+                        <span id="aiStatusNotice" class="small text-muted fst-italic d-none"></span>
                     </div>
 
                     <div class="mb-4">
@@ -187,10 +204,93 @@
             modal.show();
         }
 
+        let userManuallyChangedCategory = false;
+        let userManuallyChangedPriority = false;
+
+        function runAiPrediction() {
+            const title = $('#Title').val().trim();
+            const desc = $('#Description').val().trim();
+            if (title.length < 3 && desc.length < 3) return;
+
+            const $btn = $('#btnAutoPredict');
+            $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span> Detecting with AI...');
+
+            $.ajax({
+                url: '/Tickets/PredictTicketFields',
+                type: 'GET',
+                data: { title: title, description: desc },
+                success: function (res) {
+                    $btn.prop('disabled', false).html('<i class="bi bi-robot me-1"></i> Auto-Detect with AI (ML.NET)');
+                    if (res && res.predictedCategory) {
+                        let matchedCategory = false;
+
+                        if (!userManuallyChangedCategory) {
+                            $('#CategoryId option').each(function () {
+                                if ($(this).text().trim().toLowerCase() === res.predictedCategory.trim().toLowerCase()) {
+                                    const targetVal = $(this).val();
+                                    $('#CategoryId').val(targetVal).trigger('change');
+                                    matchedCategory = true;
+                                    $('#aiCategoryBadge').removeClass('d-none');
+                                    // Clear any validation error message
+                                    $('span[data-valmsg-for="CategoryId"]').text('');
+                                    $('#CategoryId').removeClass('input-validation-error is-invalid');
+                                }
+                            });
+                        }
+
+                        if (!userManuallyChangedPriority && res.predictedPriority) {
+                            $('#Priority').val(res.predictedPriority).trigger('change');
+                            $('#aiPriorityBadge').removeClass('d-none');
+                            $('span[data-valmsg-for="Priority"]').text('');
+                            $('#Priority').removeClass('input-validation-error is-invalid');
+                        }
+
+                        if (matchedCategory) {
+                            $('#aiStatusNotice').removeClass('d-none').html(
+                                `<i class="bi bi-check-circle-fill text-success me-1"></i> Auto-selected: <strong>${res.predictedCategory}</strong> &bull; <strong>${res.predictedPriority} Priority</strong>`
+                            );
+                        }
+                    }
+                },
+                error: function () {
+                    $btn.prop('disabled', false).html('<i class="bi bi-robot me-1"></i> Auto-Detect with AI (ML.NET)');
+                }
+            });
+        }
+
         $(document).ready(function () {
+            let aiPredictionDebounceTimer = null;
+
+            $('#CategoryId').on('change', function (e) {
+                if (e.originalEvent) {
+                    userManuallyChangedCategory = true;
+                    $('#aiCategoryBadge').addClass('d-none');
+                }
+            });
+
+            $('#Priority').on('change', function (e) {
+                if (e.originalEvent) {
+                    userManuallyChangedPriority = true;
+                    $('#aiPriorityBadge').addClass('d-none');
+                }
+            });
+
             $('#Title, #Description').on('input keyup', function () {
                 clearTimeout(kbDebounceTimer);
                 kbDebounceTimer = setTimeout(fetchKbSuggestions, 350);
+
+                clearTimeout(aiPredictionDebounceTimer);
+                aiPredictionDebounceTimer = setTimeout(function () {
+                    if (!userManuallyChangedCategory) {
+                        runAiPrediction();
+                    }
+                }, 400);
+            });
+
+            $('#Title, #Description').on('blur', function () {
+                if (!userManuallyChangedCategory) {
+                    runAiPrediction();
+                }
             });
         });
     </script>

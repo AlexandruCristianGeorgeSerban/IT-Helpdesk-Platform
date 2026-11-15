@@ -15,17 +15,20 @@ namespace IT_Helpdesk_Platform.Controllers
         private readonly ICategoryService _categoryService;
         private readonly UserManager<User> _userManager;
         private readonly IRecommendationService _recommendationService;
+        private readonly ITicketPredictionService _predictionService;
 
         public TicketsController(
             ITicketService ticketService,
             ICategoryService categoryService,
             UserManager<User> userManager,
-            IRecommendationService recommendationService)
+            IRecommendationService recommendationService,
+            ITicketPredictionService predictionService)
         {
             _ticketService = ticketService;
             _categoryService = categoryService;
             _userManager = userManager;
             _recommendationService = recommendationService;
+            _predictionService = predictionService;
         }
 
         [Authorize(Roles = "Admin")]
@@ -160,6 +163,33 @@ namespace IT_Helpdesk_Platform.Controllers
             ModelState.Remove("Attachments");
             ModelState.Remove("UploadsBrute");
 
+            // Auto-classify category and priority using ML.NET if not selected by user
+            if (model.CategoryId == 0)
+            {
+                var prediction = _predictionService.PredictMetadata(model.Title ?? "", model.Description ?? "");
+                if (!string.IsNullOrEmpty(prediction.PredictedCategory))
+                {
+                    var categories = _categoryService.GetAllCategories();
+                    var matchedCategory = categories.FirstOrDefault(c =>
+                        string.Equals(c.Name, prediction.PredictedCategory, StringComparison.OrdinalIgnoreCase));
+
+                    if (matchedCategory != null)
+                    {
+                        model.CategoryId = matchedCategory.Id;
+                        ModelState.Remove(nameof(model.CategoryId));
+                    }
+                }
+
+                if (string.IsNullOrEmpty(model.Priority) || model.Priority == "Medium")
+                {
+                    if (!string.IsNullOrEmpty(prediction.PredictedPriority))
+                    {
+                        model.Priority = prediction.PredictedPriority;
+                        ModelState.Remove(nameof(model.Priority));
+                    }
+                }
+            }
+
             if (ModelState.IsValid)
             {
                 var currentUser = await _userManager.GetUserAsync(User);
@@ -190,6 +220,13 @@ namespace IT_Helpdesk_Platform.Controllers
         {
             var suggestions = await _recommendationService.GetRecommendedArticlesAsync(query, topK: 3);
             return Json(suggestions);
+        }
+
+        [HttpGet]
+        public JsonResult PredictTicketFields(string title, string description)
+        {
+            var prediction = _predictionService.PredictMetadata(title, description);
+            return Json(prediction);
         }
 
         public async Task<IActionResult> ViewTicket(int id)

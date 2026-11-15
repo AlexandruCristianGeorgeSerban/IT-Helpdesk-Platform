@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
 namespace ITHelpdesk.Tests
@@ -110,6 +111,50 @@ namespace ITHelpdesk.Tests
             Assert.Contains("reset", tokens);
             Assert.DoesNotContain("my", tokens);
             Assert.DoesNotContain("is", tokens);
+        }
+
+        // 5. ML.NET MULTICLASS PREDICTION TEST: Validates SdcaMaximumEntropy inference latency < 50 ms
+        [Fact]
+        public async Task MlNet_TicketClassification_ShouldPredictCategoryAndPriorityUnder50Ms()
+        {
+            // Arrange: Setup mock scope factory for TicketPredictionService
+            var services = new ServiceCollection();
+            var serviceProvider = services.BuildServiceProvider();
+            var scopeFactory = serviceProvider.GetRequiredService<IServiceScopeFactory>();
+
+            var predictionService = new IT_Helpdesk_Platform.Services.TicketPredictionService(scopeFactory);
+            await predictionService.TrainModelFromDatabaseAsync();
+
+            // Warm up the ML.NET prediction engine and JIT compiler once
+            predictionService.PredictMetadata("Warmup title", "Warmup description");
+
+            var sw = Stopwatch.StartNew();
+
+            // Act & Assert 1: Network & High priority prediction
+            var netResult = predictionService.PredictMetadata(
+                "Cannot connect to office Wi-Fi network",
+                "Signal keeps dropping and VPN connection timed out"
+            );
+            sw.Stop();
+
+            Assert.NotNull(netResult);
+            Assert.Equal("Network", netResult.PredictedCategory);
+            Assert.False(string.IsNullOrEmpty(netResult.PredictedPriority));
+            Assert.True(sw.ElapsedMilliseconds < 50, $"Inference took {sw.ElapsedMilliseconds} ms (Target: < 50 ms).");
+
+            // Act & Assert 2: Hardware prediction
+            var hwResult = predictionService.PredictMetadata(
+                "Laptop screen flickering black display",
+                "Monitor flashes black repeatedly on dock station"
+            );
+            Assert.Equal("Hardware", hwResult.PredictedCategory);
+
+            // Act & Assert 3: Access & Security prediction
+            var secResult = predictionService.PredictMetadata(
+                "Account locked out password expired",
+                "Active Directory lockout unable to complete login"
+            );
+            Assert.Equal("Access & Security", secResult.PredictedCategory);
         }
 
         private static double ComputeCosine(double[] vecA, double[] vecB)
