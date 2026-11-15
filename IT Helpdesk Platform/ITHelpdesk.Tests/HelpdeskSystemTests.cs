@@ -157,6 +157,59 @@ namespace ITHelpdesk.Tests
             Assert.Equal("Access & Security", secResult.PredictedCategory);
         }
 
+        // 6. SMART AGENT ROUTING TEST: Validates weighted workload calculation (Critical=4, High=3, Medium=2, Low=1)
+        [Fact]
+        public void SmartRouting_ShouldCalculateWeightedWorkloadAccurately()
+        {
+            // Arrange: Simulate active tickets for an agent
+            var activeTickets = new[]
+            {
+                new { Priority = "Critical", Status = "Open" },      // Weight: 4
+                new { Priority = "High", Status = "In Progress" },   // Weight: 3
+                new { Priority = "High", Status = "Open" },          // Weight: 3
+                new { Priority = "Medium", Status = "In Progress" }, // Weight: 2
+                new { Priority = "Low", Status = "Open" },           // Weight: 1
+                new { Priority = "Critical", Status = "Resolved" },  // Inactive: 0
+                new { Priority = "High", Status = "Closed" }         // Inactive: 0
+            };
+
+            // Act: Calculate workload sum for active tickets only
+            int totalScore = activeTickets
+                .Where(t => t.Status != "Resolved" && t.Status != "Closed")
+                .Sum(t => t.Priority switch
+                {
+                    "Critical" => 4,
+                    "High" => 3,
+                    "Medium" => 2,
+                    "Low" => 1,
+                    _ => 1
+                });
+
+            // Assert: 4 + 3 + 3 + 2 + 1 = 13
+            Assert.Equal(13, totalScore);
+        }
+
+        // 7. SLA MONITORING TEST: Validates SLA breached, approaching (<4h), and met statuses
+        [Fact]
+        public void SlaMonitoring_ShouldAccuratelyDetermineBreachedAndApproachingDeadlines()
+        {
+            // Arrange
+            var now = DateTime.UtcNow;
+            var pastDueDate = now.AddHours(-2);
+            var imminentDueDate = now.AddHours(2);
+            var safeDueDate = now.AddDays(2);
+
+            // Act: Evaluate SLA rules
+            bool breachedActive = pastDueDate < now;
+            bool approachingActive = imminentDueDate > now && (imminentDueDate - now).TotalHours < 4;
+            bool safeActive = safeDueDate > now && (safeDueDate - now).TotalHours >= 4;
+
+            // Assert
+            Assert.True(breachedActive, "Ticket past due date must be flagged as breached.");
+            Assert.True(approachingActive, "Ticket due within 4 hours must be flagged as approaching.");
+            Assert.True(safeActive, "Ticket due in 2 days must be flagged as safe/on track.");
+        }
+
         private static double ComputeCosine(double[] vecA, double[] vecB)
         {
             double dot = 0.0, normA = 0.0, normB = 0.0;

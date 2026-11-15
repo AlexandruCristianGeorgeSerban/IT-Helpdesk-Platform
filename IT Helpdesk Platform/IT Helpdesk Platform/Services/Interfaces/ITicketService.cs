@@ -1,4 +1,4 @@
-﻿using IT_Helpdesk_Platform.Models;
+using IT_Helpdesk_Platform.Models;
 
 namespace IT_Helpdesk_Platform.Services.Interfaces
 {
@@ -16,5 +16,8 @@ namespace IT_Helpdesk_Platform.Services.Interfaces
         Task<List<string>> ProcessAttachmentsAsync(int ticketId, IEnumerable<IFormFile> files, int? commentId = null);
         Task<IEnumerable<User>> GetSupportStaffAsync();
         Task<IEnumerable<User>> GetAllUsersAsync();
+        Task<int> CalculateAgentWorkloadScoreAsync(int agentId);
+        Task<Dictionary<int, int>> GetStaffWorkloadScoresAsync();
+        Task<User?> GetLeastLoadedAgentAsync(int? categoryId = null);
     }
 }

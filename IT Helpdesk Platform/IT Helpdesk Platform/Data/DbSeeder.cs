@@ -49,133 +49,210 @@ namespace IT_Helpdesk_Platform.Data
                 }
             }
 
-            // 4. SEED USERS (Admin, 3 Support Agents for Load Balancing, 2 Employees)
-            if (!userManager.Users.Any())
+            // 4. SEED USERS (Admin, Support Agents for Load Balancing across departments, Employees)
+            var usersToSeed = new[]
             {
-                var usersToSeed = new[]
+                new
                 {
-                    new
+                    User = new User
                     {
-                        User = new User
-                        {
-                            UserName = "admin@helpdesk.com",
-                            Email = "admin@helpdesk.com",
-                            FirstName = "System",
-                            LastName = "Administrator",
-                            Role = "Admin",
-                            DepartmentId = deptMap["System Administration"],
-                            PhoneNumber = "0720100100",
-                            EmailNotificationsEnabled = true,
-                            PushNotificationsEnabled = true,
-                            ProfilePicturePath = "/uploads/avatars/default_admin.png",
-                            EmailConfirmed = true
-                        },
-                        Password = "Admin123!",
-                        Role = "Admin"
+                        UserName = "admin@helpdesk.com",
+                        Email = "admin@helpdesk.com",
+                        FirstName = "System",
+                        LastName = "Administrator",
+                        Role = "Admin",
+                        DepartmentId = deptMap["System Administration"],
+                        PhoneNumber = "0720100100",
+                        EmailNotificationsEnabled = true,
+                        PushNotificationsEnabled = true,
+                        ProfilePicturePath = "/uploads/avatars/default_admin.png",
+                        EmailConfirmed = true
                     },
-                    // Agent 1: Primary Hardware/Helpdesk Agent (Higher initial workload)
-                    new
+                    Password = "Admin123!",
+                    Role = "Admin"
+                },
+                // Hardware & Devices Agents (multiple agents to demonstrate dynamic load balancing)
+                new
+                {
+                    User = new User
                     {
-                        User = new User
-                        {
-                            UserName = "agent@helpdesk.com",
-                            Email = "agent@helpdesk.com",
-                            FirstName = "Support",
-                            LastName = "Agent",
-                            Role = "Agent",
-                            DepartmentId = deptMap["Hardware & Devices"],
-                            PhoneNumber = "0720100201",
-                            EmailNotificationsEnabled = true,
-                            PushNotificationsEnabled = true,
-                            ProfilePicturePath = "/uploads/avatars/default_agent.png",
-                            EmailConfirmed = true
-                        },
-                        Password = "Agent123!",
-                        Role = "Agent"
+                        UserName = "agent@helpdesk.com",
+                        Email = "agent@helpdesk.com",
+                        FirstName = "Support",
+                        LastName = "Agent",
+                        Role = "Agent",
+                        DepartmentId = deptMap["Hardware & Devices"],
+                        PhoneNumber = "0720100201",
+                        EmailNotificationsEnabled = true,
+                        PushNotificationsEnabled = true,
+                        ProfilePicturePath = "/uploads/avatars/default_agent.png",
+                        EmailConfirmed = true
                     },
-                    // Agent 2: Network Support Agent (Medium initial workload)
-                    new
+                    Password = "Agent123!",
+                    Role = "Agent"
+                },
+                new
+                {
+                    User = new User
                     {
-                        User = new User
-                        {
-                            UserName = "andrei.agent@helpdesk.com",
-                            Email = "andrei.agent@helpdesk.com",
-                            FirstName = "Andrei",
-                            LastName = "Ionescu",
-                            Role = "Agent",
-                            DepartmentId = deptMap["Network Support"],
-                            PhoneNumber = "0720100202",
-                            EmailNotificationsEnabled = true,
-                            PushNotificationsEnabled = true,
-                            ProfilePicturePath = "/uploads/avatars/default_agent.png",
-                            EmailConfirmed = true
-                        },
-                        Password = "Agent123!",
-                        Role = "Agent"
+                        UserName = "radu.agent@helpdesk.com",
+                        Email = "radu.agent@helpdesk.com",
+                        FirstName = "Radu",
+                        LastName = "Enache",
+                        Role = "Agent",
+                        DepartmentId = deptMap["Hardware & Devices"],
+                        PhoneNumber = "0720100204",
+                        EmailNotificationsEnabled = true,
+                        PushNotificationsEnabled = true,
+                        ProfilePicturePath = "/uploads/avatars/default_agent.png",
+                        EmailConfirmed = true
                     },
-                    // Agent 3: Software & Apps Agent (Lowest workload = 0, picked first by smart load balancer!)
-                    new
+                    Password = "Agent123!",
+                    Role = "Agent"
+                },
+                new
+                {
+                    User = new User
                     {
-                        User = new User
-                        {
-                            UserName = "mihai.agent@helpdesk.com",
-                            Email = "mihai.agent@helpdesk.com",
-                            FirstName = "Mihai",
-                            LastName = "Popescu",
-                            Role = "Agent",
-                            DepartmentId = deptMap["Software & Apps"],
-                            PhoneNumber = "0720100203",
-                            EmailNotificationsEnabled = true,
-                            PushNotificationsEnabled = false,
-                            ProfilePicturePath = "/uploads/avatars/default_agent.png",
-                            EmailConfirmed = true
-                        },
-                        Password = "Agent123!",
-                        Role = "Agent"
+                        UserName = "elena.agent@helpdesk.com",
+                        Email = "elena.agent@helpdesk.com",
+                        FirstName = "Elena",
+                        LastName = "Radu",
+                        Role = "Agent",
+                        DepartmentId = deptMap["Hardware & Devices"],
+                        PhoneNumber = "0720100205",
+                        EmailNotificationsEnabled = true,
+                        PushNotificationsEnabled = true,
+                        ProfilePicturePath = "/uploads/avatars/default_agent.png",
+                        EmailConfirmed = true
                     },
-                    // Employee 1
-                    new
+                    Password = "Agent123!",
+                    Role = "Agent"
+                },
+                // Network Support Agents
+                new
+                {
+                    User = new User
                     {
-                        User = new User
-                        {
-                            UserName = "user@helpdesk.com",
-                            Email = "user@helpdesk.com",
-                            FirstName = "Employee",
-                            LastName = "User",
-                            Role = "User",
-                            DepartmentId = deptMap["Human Resources"],
-                            PhoneNumber = "0720100301",
-                            EmailNotificationsEnabled = true,
-                            PushNotificationsEnabled = true,
-                            ProfilePicturePath = "/uploads/avatars/default_user.png",
-                            EmailConfirmed = true
-                        },
-                        Password = "User123!",
-                        Role = "User"
+                        UserName = "andrei.agent@helpdesk.com",
+                        Email = "andrei.agent@helpdesk.com",
+                        FirstName = "Andrei",
+                        LastName = "Ionescu",
+                        Role = "Agent",
+                        DepartmentId = deptMap["Network Support"],
+                        PhoneNumber = "0720100202",
+                        EmailNotificationsEnabled = true,
+                        PushNotificationsEnabled = true,
+                        ProfilePicturePath = "/uploads/avatars/default_agent.png",
+                        EmailConfirmed = true
                     },
-                    // Employee 2
-                    new
+                    Password = "Agent123!",
+                    Role = "Agent"
+                },
+                new
+                {
+                    User = new User
                     {
-                        User = new User
-                        {
-                            UserName = "diana.user@helpdesk.com",
-                            Email = "diana.user@helpdesk.com",
-                            FirstName = "Diana",
-                            LastName = "Marin",
-                            Role = "User",
-                            DepartmentId = deptMap["Human Resources"],
-                            PhoneNumber = "0720100302",
-                            EmailNotificationsEnabled = true,
-                            PushNotificationsEnabled = false,
-                            ProfilePicturePath = "/uploads/avatars/default_user.png",
-                            EmailConfirmed = true
-                        },
-                        Password = "User123!",
-                        Role = "User"
-                    }
-                };
+                        UserName = "cristian.agent@helpdesk.com",
+                        Email = "cristian.agent@helpdesk.com",
+                        FirstName = "Cristian",
+                        LastName = "Dumitrescu",
+                        Role = "Agent",
+                        DepartmentId = deptMap["Network Support"],
+                        PhoneNumber = "0720100206",
+                        EmailNotificationsEnabled = true,
+                        PushNotificationsEnabled = true,
+                        ProfilePicturePath = "/uploads/avatars/default_agent.png",
+                        EmailConfirmed = true
+                    },
+                    Password = "Agent123!",
+                    Role = "Agent"
+                },
+                // Software & Apps Agents
+                new
+                {
+                    User = new User
+                    {
+                        UserName = "mihai.agent@helpdesk.com",
+                        Email = "mihai.agent@helpdesk.com",
+                        FirstName = "Mihai",
+                        LastName = "Popescu",
+                        Role = "Agent",
+                        DepartmentId = deptMap["Software & Apps"],
+                        PhoneNumber = "0720100203",
+                        EmailNotificationsEnabled = true,
+                        PushNotificationsEnabled = false,
+                        ProfilePicturePath = "/uploads/avatars/default_agent.png",
+                        EmailConfirmed = true
+                    },
+                    Password = "Agent123!",
+                    Role = "Agent"
+                },
+                new
+                {
+                    User = new User
+                    {
+                        UserName = "ioana.agent@helpdesk.com",
+                        Email = "ioana.agent@helpdesk.com",
+                        FirstName = "Ioana",
+                        LastName = "Marin",
+                        Role = "Agent",
+                        DepartmentId = deptMap["Software & Apps"],
+                        PhoneNumber = "0720100207",
+                        EmailNotificationsEnabled = true,
+                        PushNotificationsEnabled = false,
+                        ProfilePicturePath = "/uploads/avatars/default_agent.png",
+                        EmailConfirmed = true
+                    },
+                    Password = "Agent123!",
+                    Role = "Agent"
+                },
+                // Employee 1
+                new
+                {
+                    User = new User
+                    {
+                        UserName = "user@helpdesk.com",
+                        Email = "user@helpdesk.com",
+                        FirstName = "Employee",
+                        LastName = "User",
+                        Role = "User",
+                        DepartmentId = deptMap["Human Resources"],
+                        PhoneNumber = "0720100301",
+                        EmailNotificationsEnabled = true,
+                        PushNotificationsEnabled = true,
+                        ProfilePicturePath = "/uploads/avatars/default_user.png",
+                        EmailConfirmed = true
+                    },
+                    Password = "User123!",
+                    Role = "User"
+                },
+                // Employee 2
+                new
+                {
+                    User = new User
+                    {
+                        UserName = "diana.user@helpdesk.com",
+                        Email = "diana.user@helpdesk.com",
+                        FirstName = "Diana",
+                        LastName = "Marin",
+                        Role = "User",
+                        DepartmentId = deptMap["Human Resources"],
+                        PhoneNumber = "0720100302",
+                        EmailNotificationsEnabled = true,
+                        PushNotificationsEnabled = false,
+                        ProfilePicturePath = "/uploads/avatars/default_user.png",
+                        EmailConfirmed = true
+                    },
+                    Password = "User123!",
+                    Role = "User"
+                }
+            };
 
-                foreach (var item in usersToSeed)
+            foreach (var item in usersToSeed)
+            {
+                var existingUser = await userManager.FindByEmailAsync(item.User.Email!);
+                if (existingUser == null)
                 {
                     var result = await userManager.CreateAsync(item.User, item.Password);
                     if (result.Succeeded)

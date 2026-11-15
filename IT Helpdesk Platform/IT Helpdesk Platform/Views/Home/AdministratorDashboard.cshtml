@@ -1,11 +1,38 @@
-﻿@{
+@{
     ViewData["Title"] = "Administrator Dashboard";
 }
 
 <div class="container main-container mt-4">
-    <div class="text-center mb-5 pb-3 border-bottom">
+    <div class="text-center mb-4 pb-3 border-bottom">
         <h1 class="display-5 fw-bold text-danger"><i class="bi bi-headset me-2"></i>IT Administrator Platform</h1>
         <p class="lead text-muted">Welcome to the IT Support management system. Choose a module below to get started.</p>
+
+        <div class="d-flex justify-content-center align-items-center flex-wrap gap-3 mt-3">
+            @if (ViewBag.MyWorkloadScore != null)
+            {
+                int myScore = (int)ViewBag.MyWorkloadScore;
+                int myActiveTickets = ViewBag.MyActiveTicketsCount ?? 0;
+                string loadClass = myScore <= 3 ? "bg-success-subtle text-success border-success-subtle" : (myScore <= 6 ? "bg-warning-subtle text-warning border-warning-subtle" : "bg-danger-subtle text-danger border-danger-subtle");
+                <span class="badge @loadClass border px-3 py-2 fs-6 rounded-pill shadow-sm" title="Your current weighted active workload">
+                    <i class="bi bi-speedometer2 me-1"></i> My Active Workload: <strong>@myScore pts</strong> (@myActiveTickets active tickets)
+                </span>
+            }
+            @if (ViewBag.TotalTeamWorkload != null)
+            {
+                <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2 fs-6 rounded-pill shadow-sm">
+                    <i class="bi bi-people-fill me-1"></i> Total Team Workload: <strong>@ViewBag.TotalTeamWorkload pts</strong>
+                </span>
+            }
+            @if (ViewBag.SlaBreachedCount != null && (int)ViewBag.SlaBreachedCount > 0)
+            {
+                <a asp-controller="Tickets" asp-action="AllTickets" class="badge bg-danger-subtle text-danger border border-danger-subtle px-3 py-2 fs-6 rounded-pill text-decoration-none shadow-sm" title="Tickets with SLA breached">
+                    <i class="bi bi-exclamation-triangle-fill me-1"></i> SLA Breached: <strong>@ViewBag.SlaBreachedCount</strong>
+                </a>
+            }
+            <a asp-controller="Home" asp-action="AgentDashboard" class="btn btn-outline-secondary btn-sm rounded-pill px-3 shadow-sm text-decoration-none">
+                <i class="bi bi-speedometer me-1"></i> Operational Dashboard
+            </a>
+        </div>
     </div>
 
     <div class="row g-4 justify-content-center">
@@ -15,7 +42,13 @@
                 <div class="stat-card card h-100 text-center p-4 border-0 bg-white" style="border-top: 4px solid #0d6efd !important;">
                     <i class="bi bi-ticket-detailed display-4 text-primary mb-3"></i>
                     <h5 class="card-title fw-bold text-dark mb-1">Tickets</h5>
-                    <p class="text-muted small mb-0">Manage support requests</p>
+                    <p class="text-muted small mb-2">Manage support requests</p>
+                    @if (ViewBag.OpenTicketsCount != null)
+                    {
+                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill small">
+                            @ViewBag.OpenTicketsCount Open &bull; @ViewBag.InProgressCount In Progress
+                        </span>
+                    }
                 </div>
             </a>
         </div>

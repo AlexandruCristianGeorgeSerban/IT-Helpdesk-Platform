@@ -1,4 +1,4 @@
-﻿using IT_Helpdesk_Platform.Models;
+using IT_Helpdesk_Platform.Models;
 using IT_Helpdesk_Platform.Repositories.Interfaces;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -28,12 +28,22 @@ namespace IT_Helpdesk_Platform.Services
         {
             ticket.DueDate = ticket.Priority switch
             {
-                "Critical" => DateTime.Now.AddHours(4),
-                "High" => DateTime.Now.AddHours(24),
-                "Medium" => DateTime.Now.AddDays(3),
-                "Low" => DateTime.Now.AddDays(7),
-                _ => DateTime.Now.AddDays(3)
+                "Critical" => DateTime.UtcNow.AddHours(4),
+                "High" => DateTime.UtcNow.AddHours(24),
+                "Medium" => DateTime.UtcNow.AddDays(3),
+                "Low" => DateTime.UtcNow.AddDays(7),
+                _ => DateTime.UtcNow.AddDays(3)
             };
+
+            // Smart Agent Routing: auto-assign ticket to least-loaded agent if unassigned
+            if (ticket.AssignedAgentId == null || ticket.AssignedAgentId == 0)
+            {
+                var leastLoadedAgent = await GetLeastLoadedAgentAsync(ticket.CategoryId);
+                if (leastLoadedAgent != null)
+                {
+                    ticket.AssignedAgentId = leastLoadedAgent.Id;
+                }
+            }
 
             _wrapper.Ticket.Create(ticket);
             await _wrapper.SaveAsync();
@@ -140,12 +150,109 @@ namespace IT_Helpdesk_Platform.Services
         {
             var admins = await _userManager.GetUsersInRoleAsync("Admin");
             var agents = await _userManager.GetUsersInRoleAsync("Agent");
-            return admins.Concat(agents).DistinctBy(u => u.Id).ToList();
+            var staffIds = admins.Concat(agents).Select(u => u.Id).Distinct().ToList();
+
+            return await _context.Users
+                .Include(u => u.Department)
+                .Where(u => staffIds.Contains(u.Id))
+                .ToListAsync();
         }
 
         public async Task<IEnumerable<User>> GetAllUsersAsync()
         {
             return await _userManager.Users.ToListAsync();
+        }
+
+        public async Task<int> CalculateAgentWorkloadScoreAsync(int agentId)
+        {
+            var activeTickets = await _context.Tickets
+                .Where(t => t.AssignedAgentId == agentId &&
+                            t.Status != null &&
+                            t.Status.ToLower() != "resolved" &&
+                            t.Status.ToLower() != "closed")
+                .Select(t => t.Priority)
+                .ToListAsync();
+
+            return activeTickets.Sum(priority => (priority ?? "").ToLower() switch
+            {
+                "critical" => 4,
+                "high" => 3,
+                "medium" => 2,
+                "low" => 1,
+                _ => 1
+            });
+        }
+
+        public async Task<Dictionary<int, int>> GetStaffWorkloadScoresAsync()
+        {
+            var staff = await GetSupportStaffAsync();
+            var scores = new Dictionary<int, int>();
+
+            var activeTickets = await _context.Tickets
+                .Where(t => t.AssignedAgentId.HasValue &&
+                            t.Status != null &&
+                            t.Status.ToLower() != "resolved" &&
+                            t.Status.ToLower() != "closed")
+                .Select(t => new { AgentId = t.AssignedAgentId!.Value, Priority = t.Priority ?? "" })
+                .ToListAsync();
+
+            var groupedScores = activeTickets
+                .GroupBy(t => t.AgentId)
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.Sum(t => t.Priority.ToLower() switch
+                    {
+                        "critical" => 4,
+                        "high" => 3,
+                        "medium" => 2,
+                        "low" => 1,
+                        _ => 1
+                    })
+                );
+
+            foreach (var member in staff)
+            {
+                scores[member.Id] = groupedScores.GetValueOrDefault(member.Id, 0);
+            }
+
+            return scores;
+        }
+
+        public async Task<User?> GetLeastLoadedAgentAsync(int? categoryId = null)
+        {
+            var allStaff = (await GetSupportStaffAsync()).ToList();
+
+            // Automatically assign exclusively to Support Agents (Role == "Agent"), never to Administrators
+            var agents = allStaff.Where(u => string.Equals(u.Role, "Agent", StringComparison.OrdinalIgnoreCase)).ToList();
+            if (!agents.Any())
+            {
+                agents = allStaff; // Fallback only if no dedicated agents exist
+            }
+            if (!agents.Any()) return null;
+
+            var workloads = await GetStaffWorkloadScoresAsync();
+
+            // Try to match category domain with agent's department if available
+            if (categoryId.HasValue && categoryId.Value > 0)
+            {
+                var category = await _context.Categories.FindAsync(categoryId.Value);
+                if (category?.Name != null)
+                {
+                    var matchingStaff = agents.Where(u =>
+                        u.Department != null &&
+                        (u.Department.Name!.Contains(category.Name, StringComparison.OrdinalIgnoreCase) ||
+                         category.Name.Contains(u.Department.Name, StringComparison.OrdinalIgnoreCase))
+                    ).ToList();
+
+                    if (matchingStaff.Any())
+                    {
+                        return matchingStaff.OrderBy(u => workloads.GetValueOrDefault(u.Id, 0)).First();
+                    }
+                }
+            }
+
+            // Fallback: return the support agent with the minimum workload score overall
+            return agents.OrderBy(u => workloads.GetValueOrDefault(u.Id, 0)).First();
         }
     }
 }
