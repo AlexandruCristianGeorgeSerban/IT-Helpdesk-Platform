@@ -64,6 +64,7 @@ builder.Services.AddScoped<IKnowledgeBaseService, KnowledgeBaseService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IRecommendationService, RecommendationService>();
+builder.Services.AddSingleton<ITicketPredictionService, TicketPredictionService>();
 
 var app = builder.Build();
 
@@ -103,6 +104,10 @@ using (var scope = app.Services.CreateScope())
 
         // Seed roles, departments, categories, users, knowledge articles, tickets, and comments
         await DbSeeder.SeedAsync(services, context, userManager, roleManager);
+
+        // Pre-train ML.NET ticket classification models on startup
+        var predictionService = services.GetRequiredService<ITicketPredictionService>();
+        await predictionService.TrainModelFromDatabaseAsync();
     }
     catch (Exception ex)
     {
