@@ -27,6 +27,7 @@ namespace IT_Helpdesk_Platform.Models.ML
         public string PredictedCategory { get; set; } = string.Empty;
         public string PredictedDepartment { get; set; } = string.Empty;
         public string PredictedPriority { get; set; } = string.Empty;
+        public double ConfidencePercentage { get; set; }
         public float[] Score { get; set; } = Array.Empty<float>();
     }
 

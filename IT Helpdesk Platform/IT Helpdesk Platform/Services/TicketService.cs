@@ -19,21 +19,31 @@ namespace IT_Helpdesk_Platform.Services
         }
 
         public async Task<IEnumerable<Ticket>> GetAllTicketsAsync() =>
-            await _wrapper.Ticket.GetQueryableTicketsWithDetails().ToListAsync();
+            await _wrapper.Ticket.GetQueryableTicketsWithDetails()
+                .OrderByDescending(t => t.CreatedAt)
+                .ToListAsync();
 
         public async Task<Ticket?> GetTicketDetailsAsync(int id) =>
             await _wrapper.Ticket.GetTicketByIdAsync(id);
 
+        public DateTime CalculateDueDate(string? priority, DateTime createdAt) =>
+            CalculateDueDateStatic(priority, createdAt);
+
+        public static DateTime CalculateDueDateStatic(string? priority, DateTime createdAt) =>
+            (priority ?? "").ToLower() switch
+            {
+                "critical" => createdAt.AddHours(4),
+                "high" => createdAt.AddHours(24),
+                "medium" => createdAt.AddDays(3),
+                "low" => createdAt.AddDays(7),
+                _ => createdAt.AddDays(3)
+            };
+
         public async Task CreateTicketAsync(Ticket ticket, bool isUserSubmission = false)
         {
-            ticket.DueDate = ticket.Priority switch
-            {
-                "Critical" => DateTime.UtcNow.AddHours(4),
-                "High" => DateTime.UtcNow.AddHours(24),
-                "Medium" => DateTime.UtcNow.AddDays(3),
-                "Low" => DateTime.UtcNow.AddDays(7),
-                _ => DateTime.UtcNow.AddDays(3)
-            };
+            var baseTime = ticket.CreatedAt == default ? DateTime.UtcNow : ticket.CreatedAt;
+            ticket.CreatedAt = baseTime;
+            ticket.DueDate = CalculateDueDateStatic(ticket.Priority, baseTime);
 
             // Smart Agent Routing: auto-assign ticket to least-loaded agent if unassigned
             if (ticket.AssignedAgentId == null || ticket.AssignedAgentId == 0)
@@ -94,7 +104,7 @@ namespace IT_Helpdesk_Platform.Services
             if (!string.IsNullOrEmpty(statusFilter) && statusFilter != "All") query = query.Where(t => t.Status == statusFilter);
             if (!string.IsNullOrEmpty(priorityFilter) && priorityFilter != "All") query = query.Where(t => t.Priority == priorityFilter);
 
-            return await query.ToListAsync();
+            return await query.OrderByDescending(t => t.CreatedAt).ToListAsync();
         }
 
         public async Task AddCommentAsync(Comment comment)

@@ -19,5 +19,6 @@ namespace IT_Helpdesk_Platform.Services.Interfaces
         Task<int> CalculateAgentWorkloadScoreAsync(int agentId);
         Task<Dictionary<int, int>> GetStaffWorkloadScoresAsync();
         Task<User?> GetLeastLoadedAgentAsync(int? categoryId = null);
+        DateTime CalculateDueDate(string? priority, DateTime createdAt);
     }
 }

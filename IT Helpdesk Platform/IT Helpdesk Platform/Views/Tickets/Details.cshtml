@@ -1,4 +1,4 @@
-﻿@model IT_Helpdesk_Platform.Models.Ticket
+@model IT_Helpdesk_Platform.Models.Ticket
 
 @{
     ViewData["Title"] = "Ticket Details";
@@ -74,8 +74,65 @@
                                 <span class="badge @prioBadge shadow-sm">@Model.Priority</span>
                             </dd>
 
-                            <dt class="col-sm-5 text-muted">Created</dt>
-                            <dd class="col-sm-7 fw-bold">@Model.CreatedAt.ToString("MMM dd, yyyy HH:mm")</dd>
+                            <dt class="col-sm-5 text-muted mb-2">Created</dt>
+                            <dd class="col-sm-7 fw-bold mb-2">@Model.CreatedAt.ToString("MMM dd, yyyy HH:mm")</dd>
+
+                            <dt class="col-sm-5 text-muted">SLA Due Date</dt>
+                            <dd class="col-sm-7 fw-bold">
+                                @if (Model.DueDate.HasValue)
+                                {
+                                    bool isResolved = Model.Status == "Resolved" || Model.Status == "Closed";
+                                    bool isOverdue = isResolved
+                                        ? (Model.ResolvedAt.HasValue ? Model.ResolvedAt.Value > Model.DueDate.Value : false)
+                                        : DateTime.UtcNow > Model.DueDate.Value;
+                                    bool isApproaching = !isResolved && !isOverdue && (Model.DueDate.Value - DateTime.UtcNow).TotalHours < 4;
+
+                                    <div>@Model.DueDate.Value.ToString("MMM dd, yyyy HH:mm")</div>
+                                    @if (isResolved)
+                                    {
+                                        if (isOverdue)
+                                        {
+                                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill small mt-1" title="Resolved after SLA deadline@(Model.ResolvedAt.HasValue ? $" ({Model.ResolvedAt.Value:dd MMM, HH:mm})" : "")">
+                                                <i class="bi bi-exclamation-triangle-fill me-1"></i>SLA Breached (Late)
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill small mt-1" title="Resolved within SLA window@(Model.ResolvedAt.HasValue ? $" ({Model.ResolvedAt.Value:dd MMM, HH:mm})" : "")">
+                                                <i class="bi bi-check-all me-1"></i>SLA Met
+                                            </span>
+                                        }
+                                    }
+                                    else if (isOverdue)
+                                    {
+                                        <span class="badge bg-danger shadow-sm rounded-pill small mt-1">
+                                            <i class="bi bi-exclamation-triangle-fill me-1"></i>SLA Breached
+                                        </span>
+                                    }
+                                    else if (isApproaching)
+                                    {
+                                        <span class="badge bg-warning shadow-sm rounded-pill small mt-1">
+                                            <i class="bi bi-clock-history me-1"></i>SLA &lt; 4h
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-info-subtle text-info border border-info-subtle rounded-pill small mt-1">
+                                            <i class="bi bi-shield-check me-1"></i>SLA On Track
+                                        </span>
+                                    }
+                                }
+                                else
+                                {
+                                    <span class="text-muted small">Not specified</span>
+                                }
+                            </dd>
+
+                            @if (Model.ResolvedAt.HasValue)
+                            {
+                                <dt class="col-sm-5 text-muted mt-2">Resolved At</dt>
+                                <dd class="col-sm-7 fw-bold mt-2">@Model.ResolvedAt.Value.ToString("MMM dd, yyyy HH:mm")</dd>
+                            }
                         </dl>
                     </div>
                     <div class="col-md-6 mb-3">

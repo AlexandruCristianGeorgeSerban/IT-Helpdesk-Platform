@@ -92,7 +92,7 @@ namespace IT_Helpdesk_Platform.Controllers
         [HttpPost]
         [Authorize(Roles = "Admin")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Title,Description,Status,Priority,CreatedAt,DueDate,CategoryId,RequesterId,AssignedAgentId")] Ticket ticket)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Title,Description,Status,Priority,CreatedAt,DueDate,ResolvedAt,CategoryId,RequesterId,AssignedAgentId")] Ticket ticket)
         {
             if (id != ticket.Id) return NotFound();
             ClearTicketModelState();
@@ -101,6 +101,32 @@ namespace IT_Helpdesk_Platform.Controllers
             {
                 try
                 {
+                    var existing = await _ticketService.GetTicketDetailsAsync(id);
+                    if (existing != null && !string.Equals(existing.Priority, ticket.Priority, StringComparison.OrdinalIgnoreCase))
+                    {
+                        ticket.DueDate = _ticketService.CalculateDueDate(ticket.Priority, existing.CreatedAt);
+                    }
+
+                    bool isNewStatusResolvedOrClosed = string.Equals(ticket.Status, "Resolved", StringComparison.OrdinalIgnoreCase) || string.Equals(ticket.Status, "Closed", StringComparison.OrdinalIgnoreCase);
+                    bool wasResolvedOrClosed = existing != null && (string.Equals(existing.Status, "Resolved", StringComparison.OrdinalIgnoreCase) || string.Equals(existing.Status, "Closed", StringComparison.OrdinalIgnoreCase));
+
+                    if (isNewStatusResolvedOrClosed)
+                    {
+                        if (!wasResolvedOrClosed || existing?.ResolvedAt == null)
+                        {
+                            ticket.ResolvedAt = DateTime.UtcNow;
+                        }
+                        else
+                        {
+                            ticket.ResolvedAt = existing.ResolvedAt;
+                        }
+                    }
+                    else
+                    {
+                        // Ticket reopened -> clear ResolvedAt so timer uses current time
+                        ticket.ResolvedAt = null;
+                    }
+
                     await _ticketService.UpdateTicketAsync(ticket);
                 }
                 catch (DbUpdateConcurrencyException)
@@ -397,9 +423,32 @@ namespace IT_Helpdesk_Platform.Controllers
             var ticket = await _ticketService.GetTicketDetailsAsync(TicketId);
             if (ticket == null) return NotFound();
 
+            bool priorityChanged = !string.Equals(ticket.Priority, Priority, StringComparison.OrdinalIgnoreCase);
+            bool isNewStatusResolvedOrClosed = string.Equals(Status, "Resolved", StringComparison.OrdinalIgnoreCase) || string.Equals(Status, "Closed", StringComparison.OrdinalIgnoreCase);
+            bool wasResolvedOrClosed = string.Equals(ticket.Status, "Resolved", StringComparison.OrdinalIgnoreCase) || string.Equals(ticket.Status, "Closed", StringComparison.OrdinalIgnoreCase);
+
             ticket.Status = Status;
             ticket.Priority = Priority;
             ticket.AssignedAgentId = AssignedAgentId;
+
+            if (isNewStatusResolvedOrClosed)
+            {
+                if (!wasResolvedOrClosed || !ticket.ResolvedAt.HasValue)
+                {
+                    ticket.ResolvedAt = DateTime.UtcNow;
+                }
+            }
+            else
+            {
+                // Ticket reopened -> clear ResolvedAt so timer uses current time
+                ticket.ResolvedAt = null;
+            }
+
+            // Recalculate SLA DueDate from original CreatedAt when priority changes
+            if (priorityChanged || !ticket.DueDate.HasValue)
+            {
+                ticket.DueDate = _ticketService.CalculateDueDate(Priority, ticket.CreatedAt);
+            }
 
             ticket.Requester = null!;
             ticket.AssignedAgent = null!;

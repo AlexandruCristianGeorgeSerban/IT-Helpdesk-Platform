@@ -173,6 +173,9 @@ namespace IT_Helpdesk_Platform.Migrations
                     b.Property<int?>("RequesterId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<DateTime?>("ResolvedAt")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(20)

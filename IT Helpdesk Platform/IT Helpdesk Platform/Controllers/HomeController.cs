@@ -69,6 +69,11 @@ namespace IT_Helpdesk_Platform.Controllers
                                                           t.DueDate.Value < DateTime.UtcNow &&
                                                           !string.Equals(t.Status, "Resolved", StringComparison.OrdinalIgnoreCase) &&
                                                           !string.Equals(t.Status, "Closed", StringComparison.OrdinalIgnoreCase));
+            ViewBag.LateResolvedCount = tickets.Count(t => t.DueDate.HasValue &&
+                                                           (string.Equals(t.Status, "Resolved", StringComparison.OrdinalIgnoreCase) ||
+                                                            string.Equals(t.Status, "Closed", StringComparison.OrdinalIgnoreCase)) &&
+                                                           t.ResolvedAt.HasValue &&
+                                                           t.ResolvedAt.Value > t.DueDate.Value);
 
             if (currentUser != null)
             {
