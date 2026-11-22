@@ -469,6 +469,7 @@ namespace IT_Helpdesk_Platform.Data
                             Priority = "High",
                             CreatedAt = now.AddDays(-14),
                             DueDate = now.AddDays(-13),
+                            ResolvedAt = now.AddDays(-13).AddHours(-4),
                             CategoryId = catMap["Hardware"],
                             RequesterId = client2.Id,
                             AssignedAgentId = agent1.Id
@@ -481,6 +482,7 @@ namespace IT_Helpdesk_Platform.Data
                             Priority = "Medium",
                             CreatedAt = now.AddDays(-12),
                             DueDate = now.AddDays(-11),
+                            ResolvedAt = now.AddDays(-11).AddHours(-6),
                             CategoryId = catMap["Hardware"],
                             RequesterId = employee.Id,
                             AssignedAgentId = agent1.Id
@@ -493,6 +495,7 @@ namespace IT_Helpdesk_Platform.Data
                             Priority = "High",
                             CreatedAt = now.AddDays(-10),
                             DueDate = now.AddDays(-9),
+                            ResolvedAt = now.AddDays(-9).AddHours(-2),
                             CategoryId = catMap["Network"],
                             RequesterId = client2.Id,
                             AssignedAgentId = agent2.Id
@@ -505,6 +508,7 @@ namespace IT_Helpdesk_Platform.Data
                             Priority = "High",
                             CreatedAt = now.AddDays(-9),
                             DueDate = now.AddDays(-8),
+                            ResolvedAt = now.AddDays(-8).AddHours(5), // Late resolution example
                             CategoryId = catMap["Network"],
                             RequesterId = employee.Id,
                             AssignedAgentId = agent2.Id
@@ -517,6 +521,7 @@ namespace IT_Helpdesk_Platform.Data
                             Priority = "Medium",
                             CreatedAt = now.AddDays(-8),
                             DueDate = now.AddDays(-7),
+                            ResolvedAt = now.AddDays(-7).AddHours(-8),
                             CategoryId = catMap["Software"],
                             RequesterId = employee.Id,
                             AssignedAgentId = agent3.Id
@@ -529,6 +534,7 @@ namespace IT_Helpdesk_Platform.Data
                             Priority = "Low",
                             CreatedAt = now.AddDays(-7),
                             DueDate = now.AddDays(-5),
+                            ResolvedAt = now.AddDays(-5).AddHours(-10),
                             CategoryId = catMap["Software"],
                             RequesterId = client2.Id,
                             AssignedAgentId = agent3.Id
@@ -541,6 +547,7 @@ namespace IT_Helpdesk_Platform.Data
                             Priority = "High",
                             CreatedAt = now.AddDays(-6),
                             DueDate = now.AddDays(-5),
+                            ResolvedAt = now.AddDays(-5).AddHours(3), // Late resolution example
                             CategoryId = catMap["Access & Security"],
                             RequesterId = employee.Id,
                             AssignedAgentId = agent1.Id
@@ -553,6 +560,7 @@ namespace IT_Helpdesk_Platform.Data
                             Priority = "Low",
                             CreatedAt = now.AddDays(-5),
                             DueDate = now.AddDays(-3),
+                            ResolvedAt = now.AddDays(-3).AddHours(-5),
                             CategoryId = catMap["Access & Security"],
                             RequesterId = client2.Id,
                             AssignedAgentId = agent3.Id
@@ -565,6 +573,7 @@ namespace IT_Helpdesk_Platform.Data
                             Priority = "Low",
                             CreatedAt = now.AddDays(-4),
                             DueDate = now.AddDays(-2),
+                            ResolvedAt = now.AddDays(-2).AddHours(-12),
                             CategoryId = catMap["Hardware"],
                             RequesterId = employee.Id,
                             AssignedAgentId = agent1.Id
@@ -577,6 +586,7 @@ namespace IT_Helpdesk_Platform.Data
                             Priority = "High",
                             CreatedAt = now.AddDays(-15),
                             DueDate = now.AddDays(-14),
+                            ResolvedAt = now.AddDays(-14).AddHours(-4),
                             CategoryId = catMap["Hardware"],
                             RequesterId = employee.Id,
                             AssignedAgentId = agent1.Id
@@ -589,6 +599,7 @@ namespace IT_Helpdesk_Platform.Data
                             Priority = "Medium",
                             CreatedAt = now.AddDays(-11),
                             DueDate = now.AddDays(-10),
+                            ResolvedAt = now.AddDays(-10).AddHours(-8),
                             CategoryId = catMap["Network"],
                             RequesterId = client2.Id,
                             AssignedAgentId = agent2.Id
@@ -601,6 +612,7 @@ namespace IT_Helpdesk_Platform.Data
                             Priority = "Low",
                             CreatedAt = now.AddDays(-8),
                             DueDate = now.AddDays(-6),
+                            ResolvedAt = now.AddDays(-6).AddHours(-10),
                             CategoryId = catMap["Software"],
                             RequesterId = employee.Id,
                             AssignedAgentId = agent3.Id
@@ -613,6 +625,7 @@ namespace IT_Helpdesk_Platform.Data
                             Priority = "High",
                             CreatedAt = now.AddDays(-5),
                             DueDate = now.AddDays(-4),
+                            ResolvedAt = now.AddDays(-4).AddHours(-6),
                             CategoryId = catMap["Access & Security"],
                             RequesterId = client2.Id,
                             AssignedAgentId = agent1.Id

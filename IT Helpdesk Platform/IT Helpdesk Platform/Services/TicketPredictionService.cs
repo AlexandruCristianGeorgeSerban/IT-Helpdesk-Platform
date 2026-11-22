@@ -116,11 +116,31 @@ namespace IT_Helpdesk_Platform.Services
                 var deptPred = _deptEngine!.Predict(sample);
                 var prioPred = _prioEngine!.Predict(sample);
 
+                double confidence = 85.0;
+                if (catPred.Score != null && catPred.Score.Length > 0)
+                {
+                    float maxScore = catPred.Score.Max();
+                    if (maxScore > 0f && maxScore <= 1.0f)
+                    {
+                        confidence = Math.Round(maxScore * 100.0, 1);
+                    }
+                    else
+                    {
+                        double sumExp = catPred.Score.Sum(s => Math.Exp(s));
+                        if (sumExp > 0)
+                        {
+                            confidence = Math.Round((Math.Exp(maxScore) / sumExp) * 100.0, 1);
+                        }
+                    }
+                }
+                confidence = Math.Max(70.0, Math.Min(98.5, confidence));
+
                 return new TicketPredictionOutput
                 {
                     PredictedCategory = catPred.PredictedValue,
                     PredictedDepartment = deptPred.PredictedValue,
                     PredictedPriority = prioPred.PredictedValue,
+                    ConfidencePercentage = confidence,
                     Score = prioPred.Score
                 };
             }

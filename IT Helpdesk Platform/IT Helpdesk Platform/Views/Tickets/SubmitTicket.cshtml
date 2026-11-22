@@ -206,6 +206,24 @@
 
         let userManuallyChangedCategory = false;
         let userManuallyChangedPriority = false;
+        let lastPredictedCategory = '';
+        let lastPredictedPriority = '';
+
+        function updateAiBadges() {
+            const selectedCatText = $('#CategoryId option:selected').text().trim().toLowerCase();
+            if (lastPredictedCategory && selectedCatText === lastPredictedCategory.trim().toLowerCase()) {
+                $('#aiCategoryBadge').removeClass('d-none');
+            } else {
+                $('#aiCategoryBadge').addClass('d-none');
+            }
+
+            const selectedPrio = ($('#Priority').val() || '').trim().toLowerCase();
+            if (lastPredictedPriority && selectedPrio === lastPredictedPriority.trim().toLowerCase()) {
+                $('#aiPriorityBadge').removeClass('d-none');
+            } else {
+                $('#aiPriorityBadge').addClass('d-none');
+            }
+        }
 
         function runAiPrediction(force = false) {
             const title = $('#Title').val().trim();
@@ -227,15 +245,14 @@
                 success: function (res) {
                     $btn.prop('disabled', false).html('<i class="bi bi-robot me-1"></i> Auto-Detect with AI (ML.NET)');
                     if (res && res.predictedCategory) {
-                        let matchedCategory = false;
+                        lastPredictedCategory = res.predictedCategory;
+                        lastPredictedPriority = res.predictedPriority;
 
                         if (force || !userManuallyChangedCategory) {
                             $('#CategoryId option').each(function () {
                                 if ($(this).text().trim().toLowerCase() === res.predictedCategory.trim().toLowerCase()) {
                                     const targetVal = $(this).val();
-                                    $('#CategoryId').val(targetVal).trigger('change');
-                                    matchedCategory = true;
-                                    $('#aiCategoryBadge').removeClass('d-none');
+                                    $('#CategoryId').val(targetVal);
                                     // Clear any validation error message
                                     $('span[data-valmsg-for="CategoryId"]').text('');
                                     $('#CategoryId').removeClass('input-validation-error is-invalid');
@@ -245,18 +262,20 @@
 
                         if (force || !userManuallyChangedPriority) {
                             if (res.predictedPriority) {
-                                $('#Priority').val(res.predictedPriority).trigger('change');
-                                $('#aiPriorityBadge').removeClass('d-none');
+                                $('#Priority').val(res.predictedPriority);
                                 $('span[data-valmsg-for="Priority"]').text('');
                                 $('#Priority').removeClass('input-validation-error is-invalid');
                             }
                         }
 
-                        if (matchedCategory || res.predictedPriority) {
-                            $('#aiStatusNotice').removeClass('d-none').html(
-                                `<i class="bi bi-check-circle-fill text-success me-1"></i> Auto-selected: <strong>${res.predictedCategory}</strong> &bull; <strong>${res.predictedPriority} Priority</strong>`
-                            );
-                        }
+                        updateAiBadges();
+
+                        const confBadge = res.confidencePercentage 
+                            ? `<span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill ms-1">${res.confidencePercentage}% confidence</span>` 
+                            : '';
+                        $('#aiStatusNotice').removeClass('d-none').html(
+                            `<i class="bi bi-check-circle-fill text-success me-1"></i> AI Recommended: <strong>${res.predictedCategory}</strong> &bull; <strong>${res.predictedPriority} Priority</strong> ${confBadge}`
+                        );
                     }
                 },
                 error: function () {
@@ -271,15 +290,15 @@
             $('#CategoryId').on('change', function (e) {
                 if (e.originalEvent) {
                     userManuallyChangedCategory = true;
-                    $('#aiCategoryBadge').addClass('d-none');
                 }
+                updateAiBadges();
             });
 
             $('#Priority').on('change', function (e) {
                 if (e.originalEvent) {
                     userManuallyChangedPriority = true;
-                    $('#aiPriorityBadge').addClass('d-none');
                 }
+                updateAiBadges();
             });
 
             $('#Title, #Description').on('input keyup', function () {

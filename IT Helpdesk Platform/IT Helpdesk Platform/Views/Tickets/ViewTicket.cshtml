@@ -205,18 +205,29 @@
                         @if (Model.DueDate.HasValue)
                         {
                             bool isResolved = Model.Status == "Resolved" || Model.Status == "Closed";
-                            bool isBreached = !isResolved && DateTime.UtcNow > Model.DueDate.Value;
-                            bool isApproaching = !isResolved && !isBreached && (Model.DueDate.Value - DateTime.UtcNow).TotalHours < 4;
+                            bool isOverdue = isResolved
+                                ? (Model.ResolvedAt.HasValue ? Model.ResolvedAt.Value > Model.DueDate.Value : false)
+                                : DateTime.UtcNow > Model.DueDate.Value;
+                            bool isApproaching = !isResolved && !isOverdue && (Model.DueDate.Value - DateTime.UtcNow).TotalHours < 4;
 
                             <div class="d-flex align-items-center flex-wrap gap-2 mt-1">
                                 <span>@Model.DueDate.Value.ToString("MMM dd, yyyy, HH:mm")</span>
                                 @if (isResolved)
                                 {
-                                    <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill small">
-                                        <i class="bi bi-check-all me-1"></i>SLA Met
-                                    </span>
+                                    @if (isOverdue)
+                                    {
+                                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill small" title="Ticket was resolved after the SLA deadline expired@(Model.ResolvedAt.HasValue ? $" ({Model.ResolvedAt.Value:dd MMM, HH:mm})" : "")">
+                                            <i class="bi bi-exclamation-triangle-fill me-1"></i>SLA Breached (Resolved Late)
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill small" title="Ticket was resolved within the SLA window@(Model.ResolvedAt.HasValue ? $" ({Model.ResolvedAt.Value:dd MMM, HH:mm})" : "")">
+                                            <i class="bi bi-check-all me-1"></i>SLA Met
+                                        </span>
+                                    }
                                 }
-                                else if (isBreached)
+                                else if (isOverdue)
                                 {
                                     <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill small">
                                         <i class="bi bi-exclamation-triangle-fill me-1"></i>SLA Breached
@@ -235,6 +246,14 @@
                                     </span>
                                 }
                             </div>
+
+                            @if (isResolved && Model.ResolvedAt.HasValue)
+                            {
+                                <div class="mt-2 text-muted small">
+                                    <i class="bi bi-calendar-check text-success me-1"></i>
+                                    <span>Resolved on: @Model.ResolvedAt.Value.ToString("MMM dd, yyyy, HH:mm")</span>
+                                </div>
+                            }
                         }
                         else
                         {

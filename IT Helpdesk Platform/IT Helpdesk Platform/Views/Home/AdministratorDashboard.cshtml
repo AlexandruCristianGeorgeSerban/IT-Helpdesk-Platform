@@ -25,8 +25,14 @@
             }
             @if (ViewBag.SlaBreachedCount != null && (int)ViewBag.SlaBreachedCount > 0)
             {
-                <a asp-controller="Tickets" asp-action="AllTickets" class="badge bg-danger-subtle text-danger border border-danger-subtle px-3 py-2 fs-6 rounded-pill text-decoration-none shadow-sm" title="Tickets with SLA breached">
+                <a asp-controller="Tickets" asp-action="AllTickets" class="badge bg-danger-subtle text-danger border border-danger-subtle px-3 py-2 fs-6 rounded-pill text-decoration-none shadow-sm" title="Active tickets exceeding SLA deadline">
                     <i class="bi bi-exclamation-triangle-fill me-1"></i> SLA Breached: <strong>@ViewBag.SlaBreachedCount</strong>
+                </a>
+            }
+            @if (ViewBag.LateResolvedCount != null && (int)ViewBag.LateResolvedCount > 0)
+            {
+                <a asp-controller="Tickets" asp-action="AllTickets" class="badge bg-warning-subtle text-danger border border-warning-subtle px-3 py-2 fs-6 rounded-pill text-decoration-none shadow-sm" title="Tickets resolved after SLA deadline">
+                    <i class="bi bi-clock-history me-1"></i> Resolved Late: <strong>@ViewBag.LateResolvedCount</strong>
                 </a>
             }
             <a asp-controller="Home" asp-action="AgentDashboard" class="btn btn-outline-secondary btn-sm rounded-pill px-3 shadow-sm text-decoration-none">

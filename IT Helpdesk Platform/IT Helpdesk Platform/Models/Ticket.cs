@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace IT_Helpdesk_Platform.Models
@@ -26,6 +26,8 @@ namespace IT_Helpdesk_Platform.Models
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         public DateTime? DueDate { get; set; }
+
+        public DateTime? ResolvedAt { get; set; }
 
         public int CategoryId { get; set; }
         [ForeignKey("CategoryId")]

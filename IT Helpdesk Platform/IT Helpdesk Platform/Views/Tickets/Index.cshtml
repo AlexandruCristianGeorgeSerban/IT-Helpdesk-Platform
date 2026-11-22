@@ -1,4 +1,4 @@
-﻿@model IEnumerable<IT_Helpdesk_Platform.Models.Ticket>
+@model IEnumerable<IT_Helpdesk_Platform.Models.Ticket>
 
 @{
     ViewData["Title"] = "Tickets Management";
@@ -71,7 +71,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var item in Model)
+                    @foreach (var item in Model.OrderByDescending(t => t.CreatedAt))
                     {
                         <tr>
                             <td class="text-muted fw-bold">#@item.Id</td>
@@ -139,13 +139,44 @@
                             <td>
                                 @if (item.DueDate.HasValue)
                                 {
-                                    <span class="@(item.DueDate.Value < DateTime.Now && item.Status != "Closed" && item.Status != "Resolved" ? "text-danger fw-bold" : "text-muted small")">
-                                        @item.DueDate.Value.ToString("MMM dd")
-                                    </span>
+                                    bool isResolved = item.Status == "Closed" || item.Status == "Resolved";
+                                    bool isOverdue = isResolved
+                                        ? (item.ResolvedAt.HasValue ? item.ResolvedAt.Value > item.DueDate.Value : false)
+                                        : DateTime.UtcNow > item.DueDate.Value;
+                                    bool isApproaching = !isResolved && !isOverdue && (item.DueDate.Value - DateTime.UtcNow).TotalHours < 4;
+
+                                    <div class="small text-muted">@item.DueDate.Value.ToString("MMM dd, HH:mm")</div>
+                                    if (isResolved)
+                                    {
+                                        if (isOverdue)
+                                        {
+                                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle small d-block mt-1" title="Resolved after SLA deadline@(item.ResolvedAt.HasValue ? $" ({item.ResolvedAt.Value:dd MMM, HH:mm})" : "")">
+                                                <i class="bi bi-exclamation-triangle-fill me-1"></i>SLA Breached (Late)
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle small d-block mt-1" title="Resolved within SLA window@(item.ResolvedAt.HasValue ? $" ({item.ResolvedAt.Value:dd MMM, HH:mm})" : "")">
+                                                <i class="bi bi-check-all me-1"></i>SLA Met
+                                            </span>
+                                        }
+                                    }
+                                    else if (isOverdue)
+                                    {
+                                        <span class="badge bg-danger shadow-sm d-block mt-1">
+                                            <i class="bi bi-exclamation-triangle-fill me-1"></i>SLA Breached
+                                        </span>
+                                    }
+                                    else if (isApproaching)
+                                    {
+                                        <span class="badge bg-warning shadow-sm d-block mt-1">
+                                            <i class="bi bi-clock-history me-1"></i>Approaching SLA
+                                        </span>
+                                    }
                                 }
                                 else
                                 {
-                                    <span class="text-muted">-</span>
+                                    <span class="text-muted small">-</span>
                                 }
                             </td>
 

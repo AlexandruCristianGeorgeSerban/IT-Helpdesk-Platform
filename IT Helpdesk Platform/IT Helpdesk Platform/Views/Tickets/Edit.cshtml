@@ -1,4 +1,4 @@
-﻿@model IT_Helpdesk_Platform.Models.Ticket
+@model IT_Helpdesk_Platform.Models.Ticket
 
 @{
     ViewData["Title"] = "Edit Ticket";
@@ -13,7 +13,9 @@
             
             <input type="hidden" asp-for="Id" />
             <input type="hidden" asp-for="CreatedAt" />
-            <input type="hidden" asp-for="DueDate" /> <div class="mb-3">
+            <input type="hidden" asp-for="DueDate" />
+            <input type="hidden" asp-for="ResolvedAt" />
+            <div class="mb-3">
             <label asp-for="Title" class="form-label fw-bold">Issue Title</label>
             <input asp-for="Title" class="form-control" />
             <span asp-validation-for="Title" class="text-danger small"></span>

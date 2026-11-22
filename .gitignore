@@ -81,10 +81,10 @@ appsettings.Local.json
 .env
 
 # Ignoră fișierele de test încărcate de utilizatori în wwwroot/uploads, dar păstrează structura de foldere
-wwwroot/uploads/avatars/*
-!wwwroot/uploads/avatars/.gitkeep
-wwwroot/uploads/tickets/*
-!wwwroot/uploads/tickets/.gitkeep
+**/wwwroot/uploads/avatars/*
+!**/wwwroot/uploads/avatars/.gitkeep
+**/wwwroot/uploads/tickets/*
+!**/wwwroot/uploads/tickets/.gitkeep
 
 # Fișiere temporare ML.NET (AutoML logs)
 *.mlnet.log

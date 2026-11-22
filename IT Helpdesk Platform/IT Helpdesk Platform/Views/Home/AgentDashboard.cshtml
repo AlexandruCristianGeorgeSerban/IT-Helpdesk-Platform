@@ -6,7 +6,8 @@
     var openCount = Model.Count(t => t.Status == "Open");
     var inProgressCount = Model.Count(t => t.Status == "In Progress");
     var resolvedCount = Model.Count(t => t.Status == "Resolved");
-    var slaBreachedCount = Model.Count(t => t.DueDate.HasValue && t.DueDate < DateTime.Now && t.Status != "Resolved" && t.Status != "Closed");
+    var slaBreachedCount = Model.Count(t => t.DueDate.HasValue && t.DueDate < DateTime.UtcNow && t.Status != "Resolved" && t.Status != "Closed");
+    var lateResolvedCount = Model.Count(t => t.DueDate.HasValue && (t.Status == "Resolved" || t.Status == "Closed") && t.ResolvedAt.HasValue && t.ResolvedAt.Value > t.DueDate.Value);
 }
 
 <div class="container main-container">
@@ -52,7 +53,11 @@
             <div class="card stat-card h-100" onclick="window.location.href='@Url.Action("AllTickets", "Tickets")'" style="border-top: 4px solid #dc3545 !important;">
                 <div class="card-body text-center">
                     <h5 class="card-title text-danger">Service Level Agreement Breached</h5>
-                    <p class="display-4 text-danger">@slaBreachedCount</p>
+                    <p class="display-4 text-danger mb-0">@slaBreachedCount</p>
+                    @if (lateResolvedCount > 0)
+                    {
+                        <small class="text-muted d-block mt-2">(+ @lateResolvedCount resolved late)</small>
+                    }
                 </div>
             </div>
         </div>
@@ -87,16 +92,39 @@
                                             @(ticket.DueDate.HasValue? ticket.DueDate.Value.ToString("dd MMM, HH:mm") : "N/A")
                                         </small>
 
-                                        @if (ticket.DueDate.HasValue && ticket.Status != "Resolved" && ticket.Status != "Closed")
+                                        @if (ticket.DueDate.HasValue)
                                         {
-                                            if (ticket.DueDate < DateTime.Now)
+                                            bool isResolved = ticket.Status == "Resolved" || ticket.Status == "Closed";
+                                            bool isOverdue = isResolved
+                                                ? (ticket.ResolvedAt.HasValue ? ticket.ResolvedAt.Value > ticket.DueDate.Value : false)
+                                                : DateTime.UtcNow > ticket.DueDate.Value;
+                                            bool isApproaching = !isResolved && !isOverdue && (ticket.DueDate.Value - DateTime.UtcNow).TotalHours < 4;
+
+                                            if (isResolved)
+                                            {
+                                                if (isOverdue)
+                                                {
+                                                    <br />
+                                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle shadow-sm mt-1" title="Resolved after SLA deadline@(ticket.ResolvedAt.HasValue ? $" ({ticket.ResolvedAt.Value:dd MMM, HH:mm})" : "")">
+                                                        <i class="bi bi-exclamation-triangle-fill"></i> SLA Breached (Late)
+                                                    </span>
+                                                }
+                                                else
+                                                {
+                                                    <br />
+                                                    <span class="badge bg-success-subtle text-success border border-success-subtle shadow-sm mt-1" title="Resolved within SLA window@(ticket.ResolvedAt.HasValue ? $" ({ticket.ResolvedAt.Value:dd MMM, HH:mm})" : "")">
+                                                        <i class="bi bi-check-all"></i> SLA Met
+                                                    </span>
+                                                }
+                                            }
+                                            else if (isOverdue)
                                             {
                                                 <br />
                                                 <span class="badge bg-danger shadow-sm mt-1">
                                                     <i class="bi bi-exclamation-triangle-fill"></i> SLA Breached
                                                 </span>
                                             }
-                                            else if (ticket.DueDate < DateTime.Now.AddHours(2))
+                                            else if (isApproaching)
                                             {
                                                 <br />
                                                 <span class="badge bg-warning shadow-sm mt-1">

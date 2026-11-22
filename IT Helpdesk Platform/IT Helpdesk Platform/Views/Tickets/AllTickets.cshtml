@@ -1,4 +1,4 @@
-﻿@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Identity
 @using IT_Helpdesk_Platform.Models
 @inject UserManager<User> UserManager
 
@@ -11,10 +11,7 @@
     var currentUserId = currentUser?.Id;
 
     var sortedTickets = Model
-        .OrderByDescending(t => currentUserId.HasValue && t.AssignedAgentId == currentUserId.Value)
-        .ThenByDescending(t => t.AssignedAgentId == null)
-        .ThenBy(t => t.DueDate ?? DateTime.MaxValue)
-        .ThenByDescending(t => t.CreatedAt)
+        .OrderByDescending(t => t.CreatedAt)
         .ToList();
 }
 
@@ -72,14 +69,15 @@
             <table class="table table-hover align-middle">
                 <thead class="table-light">
                     <tr>
-                        <th style="width: 7%;">ID</th>
-                        <th style="width: 23%;">Title</th>
-                        <th style="width: 15%;">Requester</th>
-                        <th style="width: 15%;">SLA Deadline</th>
-                        <th style="width: 10%;">Priority</th>
-                        <th style="width: 10%;">Status</th>
-                        <th style="width: 12%;">Created On</th>
-                        <th style="width: 8%;">Action</th>
+                        <th style="width: 6%;">ID</th>
+                        <th style="width: 22%;">Title</th>
+                        <th style="width: 13%;">Requester</th>
+                        <th style="width: 14%;">Assigned Agent</th>
+                        <th style="width: 14%;">SLA Deadline</th>
+                        <th style="width: 9%;">Priority</th>
+                        <th style="width: 9%;">Status</th>
+                        <th style="width: 8%;">Created On</th>
+                        <th style="width: 5%;">Action</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -102,21 +100,59 @@
                             <td>@(item.Requester != null ? $"{item.Requester.FirstName} {item.Requester.LastName}" : "Unknown")</td>
                             
                             <td>
+                                @if (item.AssignedAgent != null)
+                                {
+                                    <span class="badge bg-light text-dark border shadow-sm">
+                                        <i class="bi bi-person-badge text-primary me-1"></i>@(item.AssignedAgent.FirstName) @(item.AssignedAgent.LastName)
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill">
+                                        <i class="bi bi-person-dash me-1"></i>Unassigned
+                                    </span>
+                                }
+                            </td>
+
+                            <td>
                                 <small class="text-muted">
                                     <i class="bi bi-calendar-event"></i>
                                     @(item.DueDate.HasValue ? item.DueDate.Value.ToString("dd MMM, HH:mm") : "N/A")
                                 </small>
 
-                                @if (item.DueDate.HasValue && item.Status != "Resolved" && item.Status != "Closed")
+                                @if (item.DueDate.HasValue)
                                 {
-                                    if (item.DueDate < DateTime.Now)
+                                    bool isResolved = item.Status == "Resolved" || item.Status == "Closed";
+                                    bool isOverdue = isResolved
+                                        ? (item.ResolvedAt.HasValue ? item.ResolvedAt.Value > item.DueDate.Value : false)
+                                        : DateTime.UtcNow > item.DueDate.Value;
+                                    bool isApproaching = !isResolved && !isOverdue && (item.DueDate.Value - DateTime.UtcNow).TotalHours < 4;
+
+                                    if (isResolved)
+                                    {
+                                        if (isOverdue)
+                                        {
+                                            <br />
+                                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle shadow-sm mt-1" title="Ticket was resolved after the SLA deadline expired@(item.ResolvedAt.HasValue ? $" ({item.ResolvedAt.Value:dd MMM, HH:mm})" : "")">
+                                                <i class="bi bi-exclamation-triangle-fill"></i> SLA Breached (Late)
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <br />
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle shadow-sm mt-1" title="Resolved within SLA window@(item.ResolvedAt.HasValue ? $" ({item.ResolvedAt.Value:dd MMM, HH:mm})" : "")">
+                                                <i class="bi bi-check-all"></i> SLA Met
+                                            </span>
+                                        }
+                                    }
+                                    else if (isOverdue)
                                     {
                                         <br />
                                         <span class="badge bg-danger shadow-sm mt-1">
                                             <i class="bi bi-exclamation-triangle-fill"></i> SLA Breached
                                         </span>
                                     }
-                                    else if (item.DueDate < DateTime.Now.AddHours(2))
+                                    else if (isApproaching)
                                     {
                                         <br />
                                         <span class="badge bg-warning shadow-sm mt-1">

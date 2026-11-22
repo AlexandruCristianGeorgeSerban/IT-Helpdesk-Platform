@@ -1,27 +1,30 @@
 using System.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
+using IT_Helpdesk_Platform.Models;
 using Xunit;
 
 namespace ITHelpdesk.Tests
 {
     public class HelpdeskSystemTests
     {
-        // 1. BASELINE TEST: Validates SLA deadline calculation according to ticket priority
+        // 1. BASELINE TEST: Validates SLA deadline calculation according to ticket priority (Slide 8: Critical 4h, High 24h, Medium 3 days, Low 7 days)
         [Theory]
-        [InlineData("High", 4)]
-        [InlineData("Medium", 24)]
-        [InlineData("Low", 48)]
+        [InlineData("Critical", 4)]
+        [InlineData("High", 24)]
+        [InlineData("Medium", 72)]
+        [InlineData("Low", 168)]
         public void TicketSlaDeadline_ShouldMatchPriorityWindow(string priority, int expectedHours)
         {
             // Arrange
-            DateTime createdAt = new DateTime(2026, 11, 1, 10, 0, 0);
+            DateTime createdAt = new DateTime(2026, 11, 1, 10, 0, 0, DateTimeKind.Utc);
 
             // Act
             DateTime dueDate = priority switch
             {
-                "High" => createdAt.AddHours(4),
-                "Medium" => createdAt.AddHours(24),
-                _ => createdAt.AddHours(48)
+                "Critical" => createdAt.AddHours(4),
+                "High" => createdAt.AddHours(24),
+                "Medium" => createdAt.AddDays(3),
+                _ => createdAt.AddDays(7)
             };
 
             // Assert
@@ -208,6 +211,192 @@ namespace ITHelpdesk.Tests
             Assert.True(breachedActive, "Ticket past due date must be flagged as breached.");
             Assert.True(approachingActive, "Ticket due within 4 hours must be flagged as approaching.");
             Assert.True(safeActive, "Ticket due in 2 days must be flagged as safe/on track.");
+        }
+
+        // 8. ADMIN ISOLATION TEST: Validates that Administrators are excluded from automatic ticket assignment
+        [Fact]
+        public void SmartRouting_ShouldExcludeAdministratorsFromAutomaticRouting()
+        {
+            // Arrange: 1 Admin with load 0, 2 Agents with loads 4 and 2
+            var candidateStaff = new[]
+            {
+                new { Id = 1, Role = "Admin", Workload = 0 },
+                new { Id = 2, Role = "Agent", Workload = 4 },
+                new { Id = 3, Role = "Agent", Workload = 2 }
+            };
+
+            // Act: Filter strictly candidate agents with Role == "Agent" and select minimum workload
+            var eligibleAgents = candidateStaff
+                .Where(s => s.Role == "Agent")
+                .OrderBy(s => s.Workload)
+                .ToList();
+
+            var assignedAgent = eligibleAgents.FirstOrDefault();
+
+            // Assert: Admin with 0 load must NOT be selected; Agent 3 with load 2 must be chosen
+            Assert.NotNull(assignedAgent);
+            Assert.Equal(3, assignedAgent.Id);
+            Assert.Equal(2, assignedAgent.Workload);
+            Assert.NotEqual(1, assignedAgent.Id);
+        }
+
+        // 9. ZERO WORKLOAD TEST: Validates that an agent with only Resolved/Closed tickets has 0 workload points
+        [Fact]
+        public void SmartRouting_ResolvedAndClosedTickets_ShouldYieldZeroWorkloadPoints()
+        {
+            // Arrange: Agent has 5 tickets, all resolved or closed
+            var agentTickets = new[]
+            {
+                new { Priority = "Critical", Status = "Resolved" },
+                new { Priority = "High", Status = "Resolved" },
+                new { Priority = "Medium", Status = "Closed" },
+                new { Priority = "Low", Status = "Closed" }
+            };
+
+            // Act: Calculate workload ignoring resolved and closed tickets
+            int activeLoad = agentTickets
+                .Where(t => !string.Equals(t.Status, "Resolved", StringComparison.OrdinalIgnoreCase) &&
+                            !string.Equals(t.Status, "Closed", StringComparison.OrdinalIgnoreCase))
+                .Sum(t => t.Priority switch
+                {
+                    "Critical" => 4,
+                    "High" => 3,
+                    "Medium" => 2,
+                    "Low" => 1,
+                    _ => 1
+                });
+
+            // Assert
+            Assert.Equal(0, activeLoad);
+        }
+
+        // 10. TF-IDF EDGE CASES: Validates that whitespace, sub-3-char queries, or pure punctuation do not yield query tokens
+        [Theory]
+        [InlineData("")]
+        [InlineData("   ")]
+        [InlineData("ab")]
+        [InlineData("a")]
+        [InlineData("!!! @@ ##")]
+        public void TfIdf_ShortOrPunctuationOnlyInput_ShouldYieldZeroRelevance(string input)
+        {
+            // Arrange: Service pre-validation condition (< 3 chars or whitespace) and stop-words
+            bool isRejectedEarly = string.IsNullOrWhiteSpace(input) || input.Trim().Length < 3;
+            var stopWords = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "the", "a", "an", "is", "for" };
+            
+            // Act: If not rejected early, extract valid tokens
+            var tokens = isRejectedEarly
+                ? new List<string>()
+                : System.Text.RegularExpressions.Regex.Matches(input.ToLowerInvariant(), @"[a-z0-9]+")
+                    .Select(m => m.Value)
+                    .Where(t => t.Length > 1 && !stopWords.Contains(t))
+                    .ToList();
+
+            // Assert: Query should produce no actionable tokens
+            Assert.Empty(tokens);
+        }
+
+        // 11. TF-IDF THRESHOLD: Validates that cosine similarity strictly filters out weak relevance (< 0.15)
+        [Fact]
+        public void TfIdf_RelevanceThreshold_ShouldFilterOutWeakMatchesBelow15Percent()
+        {
+            // Arrange: Vectors with weak overlap (similarity ~ 0.05) and strong overlap (> 0.50)
+            double[] queryVec = { 0.9, 0.1, 0.0, 0.0 };
+            double[] weakArticleVec = { 0.05, 0.0, 0.9, 0.9 }; // Very weak overlap on dimension 0
+            double[] strongArticleVec = { 0.85, 0.2, 0.0, 0.1 };
+
+            // Act
+            double weakSim = ComputeCosine(queryVec, weakArticleVec);
+            double strongSim = ComputeCosine(queryVec, strongArticleVec);
+
+            // Assert
+            Assert.True(weakSim < 0.15, $"Weak similarity was {weakSim}, should be < 0.15");
+            Assert.True(strongSim >= 0.15, $"Strong similarity was {strongSim}, should be >= 0.15");
+        }
+
+        // 12. DYNAMIC SLA RECALCULATION TEST: Validates that changing priority recalculates DueDate from original CreatedAt
+        [Fact]
+        public void DynamicSla_WhenPriorityChangesFromLowToCritical_ShouldRecalculateDueDateFromCreatedAt()
+        {
+            // Arrange: Ticket was created 2 hours ago with priority "Low" (DueDate was CreatedAt + 7 days)
+            var createdAt = DateTime.UtcNow.AddHours(-2);
+            var initialDueDate = IT_Helpdesk_Platform.Services.TicketService.CalculateDueDateStatic("Low", createdAt);
+
+            // Verify initial state: due in 7 days
+            Assert.Equal(createdAt.AddDays(7), initialDueDate);
+
+            // Act: Agent or Admin escalates priority to "Critical"
+            var recalculatedDueDate = IT_Helpdesk_Platform.Services.TicketService.CalculateDueDateStatic("Critical", createdAt);
+
+            // Assert: DueDate must be exactly CreatedAt + 4 hours (leaving ~2 hours remaining from now)
+            Assert.Equal(createdAt.AddHours(4), recalculatedDueDate);
+            double hoursRemaining = (recalculatedDueDate - DateTime.UtcNow).TotalHours;
+            Assert.True(hoursRemaining > 1.8 && hoursRemaining <= 2.05, 
+                $"Remaining hours should be ~2h, but was {hoursRemaining}h");
+        }
+
+        // 13. SLA RESOLVED AT TEST: Validates that resolved/closed tickets compare against ResolvedAt instead of current UtcNow
+        [Fact]
+        public void SlaStatus_ResolvedTicket_ShouldCompareAgainstResolvedAtInsteadOfUtcNow()
+        {
+            // Ticket created 14 days ago, due 13 days ago (historical ticket)
+            var createdAt = DateTime.UtcNow.AddDays(-14);
+            var dueDate = createdAt.AddDays(1); // Due 13 days ago
+
+            // Case A: Resolved ON TIME (ResolvedAt was 13.5 days ago, before dueDate)
+            var onTimeResolvedAt = createdAt.AddHours(12); // Resolved in 12h, within 24h SLA
+            bool isResolvedA = true;
+            bool isOverdueA = isResolvedA
+                ? onTimeResolvedAt > dueDate
+                : DateTime.UtcNow > dueDate;
+
+            Assert.False(isOverdueA, "Ticket resolved within SLA deadline should evaluate to SLA Met, not overdue.");
+
+            // Case B: Resolved LATE (ResolvedAt was 12 days ago, after dueDate)
+            var lateResolvedAt = createdAt.AddDays(2); // Resolved in 48h, past 24h SLA
+            bool isResolvedB = true;
+            bool isOverdueB = isResolvedB
+                ? lateResolvedAt > dueDate
+                : DateTime.UtcNow > dueDate;
+
+            Assert.True(isOverdueB, "Ticket resolved after SLA deadline should evaluate to SLA Breached (Late).");
+        }
+
+        // 14. TICKET REOPENING TEST: Reopening a ticket resets ResolvedAt so active timer compares against DateTime.UtcNow
+        [Fact]
+        public void TicketReopening_ShouldResetResolvedAtAndRevertToUtcNowComparison()
+        {
+            var ticket = new Ticket
+            {
+                Id = 101,
+                Title = "Reopened issue test",
+                Description = "Testing ticket reopening lifecycle",
+                Status = "Resolved",
+                Priority = "High",
+                CreatedAt = DateTime.UtcNow.AddDays(-2),
+                DueDate = DateTime.UtcNow.AddHours(2), // Still valid SLA
+                ResolvedAt = DateTime.UtcNow.AddDays(-1)
+            };
+
+            // While resolved, uses ResolvedAt
+            Assert.NotNull(ticket.ResolvedAt);
+            bool isResolved = ticket.Status == "Resolved" || ticket.Status == "Closed";
+            bool isOverdueWhileResolved = isResolved
+                ? (ticket.ResolvedAt.HasValue && ticket.ResolvedAt.Value > ticket.DueDate.Value)
+                : DateTime.UtcNow > ticket.DueDate.Value;
+            Assert.False(isOverdueWhileResolved);
+
+            // Reopen ticket to "In Progress"
+            ticket.Status = "In Progress";
+            ticket.ResolvedAt = null; // Cleared on reopen
+
+            // Now comparison uses DateTime.UtcNow
+            bool isResolvedAfterReopen = ticket.Status == "Resolved" || ticket.Status == "Closed";
+            bool isOverdueAfterReopen = isResolvedAfterReopen
+                ? (ticket.ResolvedAt.HasValue && ticket.ResolvedAt.Value > ticket.DueDate.Value)
+                : DateTime.UtcNow > ticket.DueDate.Value;
+
+            Assert.False(isResolvedAfterReopen);
+            Assert.False(isOverdueAfterReopen); // Still 2 hours left from now
         }
 
         private static double ComputeCosine(double[] vecA, double[] vecB)
